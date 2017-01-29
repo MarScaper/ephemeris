@@ -22,7 +22,9 @@ int day=10,month=4,year=2014,hour=19,minute=21,second=0;
 
 SolarSystemObject planet = Ephemeris::solarSystemObjectAtDateAndTime(Mars, day, month, year, hour, minute, second);
 
-See ephemeris.ino for full sample code.
+See ephemeris.ino for full sample code...
+
+https://github.com/MarScaper/ephemeris/blob/master/ephemeris.ino
 
 ## Motivation
 
