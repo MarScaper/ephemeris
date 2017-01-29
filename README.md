@@ -6,7 +6,7 @@ Simple C++ library allowing to compute planet coordinates (equatorial and horizo
 
 ## Limitations
 
-Due to VSOP87 implementation, code needs to much flash memory for classic Arduinos (Uno, etc).
+Due to VSOP87 implementation, code needs too much flash memory for classic Arduinos (Uno, etc).
 
 ## Code Example
 
