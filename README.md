@@ -2,7 +2,7 @@
 
 ## Synopsis
 
-Simple C++ library allowing to compute planet coordinates (equatorial and horizontal) with an Arduino Mega. 
+Simple C++ library allowing to compute planet coordinates (equatorial and horizontal) with an Arduino Mega. The code is also compatible with PC.
 
 ## Limitations
 
@@ -25,6 +25,8 @@ SolarSystemObject planet = Ephemeris::solarSystemObjectAtDateAndTime(Mars, day, 
 See ephemeris.ino for full sample code...
 
 https://github.com/MarScaper/ephemeris/blob/master/ephemeris.ino
+
+![Alt text](/ephemeris_include_graph.png?raw=true "Optional Title")
 
 ## Motivation
 
