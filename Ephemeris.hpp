@@ -162,6 +162,8 @@ public:
     
     /*! Convert integer degrees, minutes, seconds to floating degrees. */
     static float degreesMinutesSecondsToFloatingDegrees(int degrees, int minutes, float seconds);
+
+    
     
     /*! Compute solar system object for a specific date, time and location on earth (if location has been initialized first). */
     static SolarSystemObject solarSystemObjectAtDateAndTime(SolarSystemObjectIndex planet,
