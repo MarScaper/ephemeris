@@ -163,13 +163,6 @@ public:
     /*! Convert integer degrees, minutes, seconds to floating degrees. */
     static float degreesMinutesSecondsToFloatingDegrees(int degrees, int minutes, float seconds);
     
-    
-    
-    /*! Compute sun coordinates in the sky (R.A.,Dec) for a specific date and time.
-     *  Reference: Chapter 16, page 63: Les coordonnées du soleil. */
-    static EquatorialCoordinates sunForDateAndTime(unsigned int day,  unsigned int month,  unsigned int year,
-                                                   unsigned int hours, unsigned int minutes, unsigned int seconds);
-    
     /*! Compute solar system object for a specific date, time and location on earth (if location has been initialized first). */
     static SolarSystemObject solarSystemObjectAtDateAndTime(SolarSystemObjectIndex planet,
                                                             unsigned int day,  unsigned int month,  unsigned int year,
@@ -208,6 +201,8 @@ private:
     /*! Compute planet informations for T. */
     static PlanetayOrbit planetayOrbitForPlanetAndT(SolarSystemObjectIndex planet, float T);
     
+    /*! Compute sun coordinates in the sky (R.A.,Dec) for a specific date and time.
+     *  Reference: Chapter 16, page 63: Les coordonnées du soleil. */
     static EquatorialCoordinates equatorialCoordinatesForSunAtJD(JulianDay jd, float *distance, GeocentricCoordinates *gCoordinates);
     
     /*! Compute equatorial coordinates (and geocentric if needed) for a a specific Julian day. */

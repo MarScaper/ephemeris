@@ -279,14 +279,6 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForSunAtJD(JulianDay jd, 
     return sunCoordinates;
 }
 
-EquatorialCoordinates Ephemeris::sunForDateAndTime(unsigned int day,   unsigned int month,   unsigned int year,
-                                                   unsigned int hours, unsigned int minutes, unsigned int seconds)
-{
-    JulianDay jd = Calendar::julianDayForDateAndTime(day, month, year, hours, minutes, seconds);
-    
-    return equatorialCoordinatesForSunAtJD(jd, NULL, NULL);
-}
-
 PlanetayOrbit Ephemeris::planetayOrbitForPlanetAndT(SolarSystemObjectIndex solarSystemObjectIndex, float T)
 {
     PlanetayOrbit planetayOrbit;
