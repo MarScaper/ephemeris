@@ -192,7 +192,19 @@ void setup()
   printDateAndTime(day,month,year,hour,minute,second);
   Serial.println(")");
   printSolarSystemObjects(day, month, year, hour, minute, second);
-  
+
+  Serial.println("Benchmarking...");
+  float startTime = millis();
+  for(int num = Sun; num<= Neptune; num++ )
+  {
+    SolarSystemObject solarSystemObject = Ephemeris::solarSystemObjectAtDateAndTime((SolarSystemObjectIndex)num, day, month, year, hour, minute, second);
+  }
+  float elapsedTime = ((double)millis() - startTime) / (double)1000;
+
+  Serial.print("Elapsed time: ");
+  Serial.print(elapsedTime);
+  Serial.println("s");
+
   return;
 }
 
