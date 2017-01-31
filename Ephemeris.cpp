@@ -32,35 +32,35 @@
 #endif
 
 // Trigonometry using degrees
-#define SIND(value)   sin(((value)*PI)/180)
-#define COSD(value)   cos(((value)*PI)/180)
-#define TAND(value)   tan(((value)*PI)/180)
-#define ASIND(value) asin(((value)*PI)/180)
-#define ACOSD(value) acos(((value)*PI)/180)
-#define ATAND(value) atan(((value)*PI)/180)
+#define SIND(value)   sin((value)*0.0174532925)
+#define COSD(value)   cos((value)*0.0174532925)
+#define TAND(value)   tan((value)*0.0174532925)
+#define ASIND(value) asin((value)*0.0174532925)
+#define ACOSD(value) acos((value)*0.0174532925)
+#define ATAND(value) atan((value)*0.0174532925)
 
 // Limit range
-#define LIMIT_DEGREES_TO_360(value) (value) >= 0 ? ((value)-(long)((value)/360)*360) : (((value)-(long)((value)/360)*360)+360)
-#define LIMIT_HOURS_TO_24(value) (value) >= 0 ? ((value)-(long)((value)/24)*24) : (value)+24
+#define LIMIT_DEGREES_TO_360(value) (value) >= 0 ? ((value)-(long)((value)*0.0027777778)*360) : (((value)-(long)((value)*0.0027777778)*360)+360)
+#define LIMIT_HOURS_TO_24(value) (value) >= 0 ? ((value)-(long)((value)*0.0416666667)*24) : ((value)+24)
 
 // Convert degrees
-#define DEGREES_TO_RADIANS(value) ((value)*PI/180)
-#define DEGREES_TO_FLOATING_HOURS(value) ((value)/15.0)
-#define DEGREES_MINUTES_SECONDES_TO_SECONDS(deg,min,sec) ((float)deg*3600+(float)min*60+(float)sec)
-#define DEGREES_MINUTES_SECONDS_TO_DECIMAL_DEGREES(deg,min,sec) deg >= 0 ? ((float)deg+(float)min/60+(float)sec/3600) : ((float)deg-(float)min/60-(float)sec/3600)
+#define DEGREES_TO_RADIANS(value) ((value)*0.0174532925)
+#define DEGREES_TO_FLOATING_HOURS(value) ((value)*0.0666666667)
+#define DEGREES_MINUTES_SECONDES_TO_SECONDS(deg,min,sec) ((float)(deg)*3600+(float)(min)*60+(float)sec)
+#define DEGREES_MINUTES_SECONDS_TO_DECIMAL_DEGREES(deg,min,sec) (deg) >= 0 ? ((float)(deg)+(float)(min)*0.0166666667+(float)(sec)*0.0002777778) : ((float)(deg)-(float)(min)*0.0166666667-(float)(sec)*0.0002777778)
 
 // Convert radians
-#define RADIANS_TO_DEGREES(value) ((value)*180/PI)
+#define RADIANS_TO_DEGREES(value) ((value)*57.2957795131)
 #define RADIANS_TO_HOURS(value) ((value)*3.81971863)
 
 // Convert hours
 #define HOURS_TO_RADIANS(value) ((value)*0.261799388)
-#define HOURS_MINUTES_SECONDS_TO_SECONDS(hour,min,sec) ((float)hour*3600+(float)min*60+(float)sec)
-#define HOURS_MINUTES_SECONDS_TO_DECIMAL_HOURS(hour,min,sec) ((float)hour+(float)min/60+(float)sec/3600)
+#define HOURS_MINUTES_SECONDS_TO_SECONDS(hour,min,sec) ((float)(hour)*3600+(float)(min)*60+(float)sec)
+#define HOURS_MINUTES_SECONDS_TO_DECIMAL_HOURS(hour,min,sec) ((float)(hour)+(float)(min)*0.0166666667+(float)(sec)*0.0002777778)
 
 // Convert seconds
-#define SECONDS_TO_DECIMAL_DEGREES(value) ((float)(value)/3600)
-#define SECONDS_TO_DECIMAL_HOURS(value) ((float)(value)/3600)
+#define SECONDS_TO_DECIMAL_DEGREES(value) ((float)(value)*0.0002777778)
+#define SECONDS_TO_DECIMAL_HOURS(value) ((float)(value)*0.0002777778)
 
 // Observer's coordinates on Earth
 static float latitudeOnEarth  = NAN;
