@@ -216,8 +216,7 @@ private:
     
     /*! Compute ELP2000 (Earth's Moon) coefficients for T. */
     static float sumELP2000Coefs(const float *moonCoefficients, const ELP2000Coefficient *moonAngleCoefficients, int coefCount,
-                                 float E, float D, float M, float Mp, float F, bool squareMultiplicator);
-    
+                                 float E, float D, float M, float Mp, float F, bool squareMultiplicator);    
 };
 
 #endif

@@ -229,18 +229,38 @@ float Ephemeris::sumELP2000Coefs(const float *moonMultCoefficients, const ELP200
         
         float angle =  moonAngle.D*D + moonAngle.M*M + moonAngle.Mp*Mp + moonAngle.F*F;
         
-        float res = multiplicator * SIND(angle);
+        float res;
+        if( moonMultCoefficients != RMoonCoefficients )
+        {
+            res  = multiplicator * SIND(angle);
+        }
+        else
+        {
+            // R coef use cos and not sin.
+            res  = multiplicator * COSD(angle);
+        }
+        
         if(squareMultiplicator)
         {
+            // To avoid out of range issue with single precision
+            // we've stored sqrt(value) and not the value. As a result we need to square it back.
             res *= multiplicator;
+            
+            // Now respect original sign
+            if( multiplicator < 0 )
+            {
+                res *= -1;
+            }
         }
         
         if( moonAngle.Ec == 1 )
         {
+            // E
             res *= E;
         }
         else if( moonAngle.Ec == 2 )
         {
+            // E^2
             res *= E;
             res *= E;
         }
@@ -290,15 +310,14 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForEarthsMoonAtJD(JulianD
     float E = 1 - 0.002516*T - 0.0000074*TCubed;
     E = LIMIT_DEGREES_TO_360(E);
     
-
+    
     float sumL = sumELP2000Coefs( LMoonCoefficients, LMoonAngleCoefficients, sizeof(LMoonCoefficients)/sizeof(float), E, D, M, Mp, F, false);
     sumL += 3958*SIND(A1) + 1962*SIND(Lp-F) + 318*SIND(A2);
     
     float sumB = sumELP2000Coefs(BMoonCoefficients, BMoonAngleCoefficients, sizeof(BMoonCoefficients)/sizeof(float), E, D, M, Mp, F, false);
     sumB += -2235*SIND(Lp) + 382*SIND(A3) + 175*SIND(A1-F) + 175*SIND(A1+F) + 127*SIND(Lp-Mp) - 115*sin(Lp+Mp);
     
-    float sumR = sumELP2000Coefs( RMoonCoefficients, RMoonAngleCoefficients, sizeof(RMoonCoefficients)/sizeof(float), E, D, M, Mp, F, true);
-    
+    float sumR = sumELP2000Coefs(RMoonCoefficients, RMoonAngleCoefficients, sizeof(RMoonCoefficients)/sizeof(float), E, D, M, Mp, F, true);
     
     // Geocentic longitude
     float lambda = Lp + sumL/1000000;   // Degrees
@@ -561,7 +580,7 @@ HorizontalCoordinates Ephemeris::equatorialToHorizontal(float H, float delta, fl
     HorizontalCoordinates coordinates;
     
     coordinates.azi = atan2(SIND(H), COSD(H)*SIND(phi)-TAND(delta)*COSD(phi));
-    coordinates.azi = RADIANS_TO_DEGREES(coordinates.azi)+180;
+    coordinates.azi = RADIANS_TO_DEGREES(coordinates.azi)+180; // +180 -> North is 0°
     coordinates.azi = LIMIT_DEGREES_TO_360(coordinates.azi);
     
     coordinates.alt = asin(SIND(phi)*SIND(delta) + COSD(phi)*COSD(delta)*COSD(H));
