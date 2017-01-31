@@ -104,35 +104,45 @@ void printHorizontalCoordinates(HorizontalCoordinates coord)
 void printSolarSystemObjects(int day, int month, int year, int hour, int minute, int second)
 {
   Serial.println("_____________________________________");
-  printPlanet("Sun",     Sun,     day, month, year, hour, minute, second);
+  printPlanet("Sun",          Sun,     day, month, year, hour, minute, second);
   Serial.println("_____________________________________");
-  printPlanet("Mercury", Mercury, day, month, year, hour, minute, second);
+  printPlanet("Mercury",      Mercury, day, month, year, hour, minute, second);
   Serial.println("_____________________________________");
-  printPlanet("Venus",   Venus,   day, month, year, hour, minute, second);
+  printPlanet("Venus",        Venus,   day, month, year, hour, minute, second);
   Serial.println("_____________________________________");
-  printPlanet("Earth",   Earth,   day, month, year, hour, minute, second);
+  printPlanet("Earth",        Earth,   day, month, year, hour, minute, second);
   Serial.println("_____________________________________");
-  printPlanet("Mars",    Mars,    day, month, year, hour, minute, second);
+  printPlanet("Earth's Moon", EarthsMoon,   day, month, year, hour, minute, second);
   Serial.println("_____________________________________");
-  printPlanet("Jupiter", Jupiter, day, month, year, hour, minute, second);
+  printPlanet("Mars",         Mars,    day, month, year, hour, minute, second);
   Serial.println("_____________________________________");
-  printPlanet("Saturn",  Saturn,  day, month, year, hour, minute, second);
+  printPlanet("Jupiter",      Jupiter, day, month, year, hour, minute, second);
   Serial.println("_____________________________________");
-  printPlanet("Uranus",  Uranus,  day, month, year, hour, minute, second);
+  printPlanet("Saturn",       Saturn,  day, month, year, hour, minute, second);
   Serial.println("_____________________________________");
-  printPlanet("Neptune", Neptune, day, month, year, hour, minute, second);
+  printPlanet("Uranus",       Uranus,  day, month, year, hour, minute, second);
+  Serial.println("_____________________________________");
+  printPlanet("Neptune",      Neptune, day, month, year, hour, minute, second);
   Serial.println("_____________________________________");
 }
 
 void printPlanet(char *solarSystemObjectName, SolarSystemObjectIndex index, int day, int month, int year, int hour, int minute, int second )
 {
-  SolarSystemObject planet = Ephemeris::solarSystemObjectAtDateAndTime(index, day, month, year, hour, minute, second);
+  SolarSystemObject solarSystemObject = Ephemeris::solarSystemObjectAtDateAndTime(index, day, month, year, hour, minute, second);
 
+  if( index == Earth )
+  {
+    Serial.println(solarSystemObjectName);
+    Serial.println("Look under your feet... ;)");
+
+    return;
+  }
+  
   Serial.println(solarSystemObjectName);
-  printEquatorialCoordinates(planet.equaCoordinates);
-  printHorizontalCoordinates(planet.horiCoordinates);
+  printEquatorialCoordinates(solarSystemObject.equaCoordinates);
+  printHorizontalCoordinates(solarSystemObject.horiCoordinates);
 
-  if( isnan(planet.diameter) )
+  if( isnan(solarSystemObject.diameter) )
   {
     // Do not work for Earth of course...
     Serial.println("Dist: -");
@@ -141,19 +151,27 @@ void printPlanet(char *solarSystemObjectName, SolarSystemObjectIndex index, int 
   else
   {
     Serial.print("Dist: ");
-    Serial.print(planet.distance,3);
-    Serial.println(" AU");
-  
-    if( planet.diameter <= 1 )
+    if( index != EarthsMoon )
+    {
+      Serial.print(solarSystemObject.distance,3);
+      Serial.println(" AU");
+    }
+    else
+    {
+      Serial.print(solarSystemObject.distance/6.68459e-9);
+      Serial.println(" Km");
+    }
+    
+    if( solarSystemObject.diameter <= 1 )
     {
       Serial.print("Diam: ");
-      Serial.print(planet.diameter*60,2);
+      Serial.print(solarSystemObject.diameter*60,2);
       Serial.println("\"");
     }
     else
     {
       Serial.print("Diam: ");
-      Serial.print(planet.diameter,2);
+      Serial.print(solarSystemObject.diameter,2);
       Serial.println("'");
     }
   }

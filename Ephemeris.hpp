@@ -21,6 +21,7 @@
 
 #include "Calendar.hpp"
 #include "VSOP87.h"
+#include "ELP2000.h"
 
 /*! This structure describes equatorial coordinates. */
 struct EquatorialCoordinates
@@ -87,7 +88,7 @@ enum SolarSystemObjectIndex
     Neptune    = 8,
     
     // Not implemented yet 
-    //EarthsMoon = 9
+    EarthsMoon = 9
 };
 
 /*! This structure describes a planet for a specific date and time. */
@@ -162,8 +163,6 @@ public:
     
     /*! Convert integer degrees, minutes, seconds to floating degrees. */
     static float degreesMinutesSecondsToFloatingDegrees(int degrees, int minutes, float seconds);
-
-    
     
     /*! Compute solar system object for a specific date, time and location on earth (if location has been initialized first). */
     static SolarSystemObject solarSystemObjectAtDateAndTime(SolarSystemObjectIndex planet,
@@ -196,23 +195,28 @@ private:
                                                         unsigned int hours, unsigned int minutes, unsigned int seconds);
     
     /*! Compute the true obliquity (angle in floating degrees) of the ecliptic,
-     *  obliquity, delta obliquity and delta nutation for T.
+     *  delta obliquity and delta nutation for T.
      *  Reference: Chapter 13, page 53: Nutation et obliquité de l'écliptique. */
     static float obliquityAndNutationForT(float T, float *deltaObliquity, float *deltaNutation);
     
     /*! Compute planet informations for T. */
     static PlanetayOrbit planetayOrbitForPlanetAndT(SolarSystemObjectIndex planet, float T);
     
+    static EquatorialCoordinates equatorialCoordinatesForEarthsMoonAtJD(JulianDay jd, float *distance);
+    
     /*! Compute sun coordinates in the sky (R.A.,Dec) for a specific date and time.
      *  Reference: Chapter 16, page 63: Les coordonnées du soleil. */
-    static EquatorialCoordinates equatorialCoordinatesForSunAtJD(JulianDay jd, float *distance, GeocentricCoordinates *gCoordinates);
+    static EquatorialCoordinates equatorialCoordinatesForSunAtJD(JulianDay jd, float *distance);
     
     /*! Compute equatorial coordinates (and geocentric if needed) for a a specific Julian day. */
-    static EquatorialCoordinates equatorialCoordinatesForPlanetAtJD(SolarSystemObjectIndex planet, JulianDay jd,
-                                                                    float *distance, GeocentricCoordinates *gCoordinates);
+    static EquatorialCoordinates equatorialCoordinatesForPlanetAtJD(SolarSystemObjectIndex planet, JulianDay jd, float *distance);
     
-    /*! Compute VSOP87 coefficients for T. */
+    /*! Compute VSOP87 (Planets) coefficients for T. */
     static float sumVSOP87Coefs(const VSOP87Coefficient *valuePlanetCoefficients, int coefCount, float T);
+    
+    /*! Compute ELP2000 (Earth's Moon) coefficients for T. */
+    static float sumELP2000Coefs(const float *moonCoefficients, const ELP2000Coefficient *moonAngleCoefficients, int coefCount,
+                                 float E, float D, float M, float Mp, float F, bool squareMultiplicator);
     
 };
 
