@@ -99,7 +99,7 @@ struct SolarSystemObject
     /*! Horizontal coordinates (Alt/Az). */
     HorizontalCoordinates horiCoordinates;
     
-    /*! Apparent diameter from earth in arc seconds. */
+    /*! Apparent diameter from earth in arc minutes. */
     float diameter;
     
     /*! Distance from earth in astronomical unit. */
