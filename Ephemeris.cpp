@@ -120,6 +120,47 @@ float Ephemeris::degreesMinutesSecondsToFloatingDegrees(int degrees, int minutes
     return DEGREES_MINUTES_SECONDS_TO_DECIMAL_DEGREES(degrees,minutes,seconds);
 }
 
+HorizontalCoordinates Ephemeris::equatorialToHorizontalCoordinatesAtDateAndTime(EquatorialCoordinates eqCoordinates,
+                                                                                unsigned int day,  unsigned int month,  unsigned int year,
+                                                                                unsigned int hours, unsigned int minutes, unsigned int seconds)
+{
+    HorizontalCoordinates hCoordinates;
+    
+    if( !isnan(longitudeOnEarth) && !isnan(latitudeOnEarth) )
+    {
+        JulianDay jd = Calendar::julianDayForDate(day, month, year);
+        
+        float T = (jd.day-2451545.0+jd.time)/36525;
+        
+        float meanSideralTime = meanGreenwichSiderealTimeAtDateAndTime(day, month, year, hours, minutes, seconds);
+        
+        float deltaNutation;
+        float epsilon = obliquityAndNutationForT(T, NULL, &deltaNutation);
+        
+        // Apparent sideral time in floating hours
+        float theta0 = meanSideralTime + (deltaNutation/15*COSD(epsilon))/3600;
+        
+        
+        // Geographic longitude in floating degrees
+        float L = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth);
+        
+        // Geographic latitude in floating degrees
+        float phi = latitudeOnEarth;
+        
+        // Local angle in floating degrees
+        float H = (theta0-L-eqCoordinates.ra)*15;
+        
+        hCoordinates = equatorialToHorizontal(H,eqCoordinates.dec,phi);
+    }
+    else
+    {
+        hCoordinates.alt = NAN;
+        hCoordinates.azi = NAN;
+    }
+    
+    return hCoordinates;
+}
+
 float Ephemeris::apparentSideralTime(unsigned int day,  unsigned int month,  unsigned int year,
                                      unsigned int hours, unsigned int minutes, unsigned int seconds)
 {
@@ -1075,7 +1116,6 @@ HeliocentricCoordinates  Ephemeris::heliocentricCoordinatesForPlanetAndT(SolarSy
             break;
             
         default:
-        
             // Do not work for Moon...
             l0 = NAN;
             l1 = NAN;

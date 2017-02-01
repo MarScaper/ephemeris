@@ -162,8 +162,15 @@ public:
     
     /*! Convert integer degrees, minutes, seconds to floating degrees. */
     static float degreesMinutesSecondsToFloatingDegrees(int degrees, int minutes, float seconds);
+    
+    
+    
+    /*! Convert equatorial coordinates to horizontal coordinates. Location on Earth must be initialized first. */
+    static HorizontalCoordinates equatorialToHorizontalCoordinatesAtDateAndTime(EquatorialCoordinates eqCoordinates,
+                                                                                unsigned int day,  unsigned int month,  unsigned int year,
+                                                                                unsigned int hours, unsigned int minutes, unsigned int seconds);
 
-
+ 
     
     /*! Compute solar system object for a specific date, time and location on earth (if location has been initialized first). */
     static SolarSystemObject solarSystemObjectAtDateAndTime(SolarSystemObjectIndex planet,
@@ -189,7 +196,7 @@ private:
     /*! Convert equatorial coordinates to horizontal coordinates.
      *  Reference: Chapter 8,  page 37: Transformation de coordonnées. */
     static HorizontalCoordinates equatorialToHorizontal(float H, float delta, float phi);
-    
+
     /*! Convert ecliptic coordinates to equatorial coordinates.
      *  Reference: Chapter 8,  page 37: Transformation de coordonnées. */
     static EquatorialCoordinates EclipticToEquatorial(float lambda, float beta, float epsilon);
