@@ -62,6 +62,8 @@
 #define SECONDS_TO_DECIMAL_DEGREES(value) ((float)(value)*0.0002777778)
 #define SECONDS_TO_DECIMAL_HOURS(value) ((float)(value)*0.0002777778)
 
+#define T_WITH_JD(day,time)((day-2451545+time)*0.0000273785)
+
 // Observer's coordinates on Earth
 static float latitudeOnEarth  = NAN;
 static float longitudeOnEarth = NAN;
@@ -130,7 +132,7 @@ HorizontalCoordinates Ephemeris::equatorialToHorizontalCoordinatesAtDateAndTime(
     {
         JulianDay jd = Calendar::julianDayForDate(day, month, year);
         
-        float T = (jd.day-2451545.0+jd.time)/36525;
+        float T = T_WITH_JD(jd.day,jd.time);
         
         float meanSideralTime = meanGreenwichSiderealTimeAtDateAndTime(day, month, year, hours, minutes, seconds);
         
@@ -141,7 +143,7 @@ HorizontalCoordinates Ephemeris::equatorialToHorizontalCoordinatesAtDateAndTime(
         float theta0 = meanSideralTime + (deltaNutation/15*COSD(epsilon))/3600;
         
         
-        // Geographic longitude in floating degrees
+        // Geographic longitude in floating hours
         float L = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth);
         
         // Geographic latitude in floating degrees
@@ -161,12 +163,57 @@ HorizontalCoordinates Ephemeris::equatorialToHorizontalCoordinatesAtDateAndTime(
     return hCoordinates;
 }
 
+EquatorialCoordinates Ephemeris::horizontalToEquatorialCoordinatesAtDateAndTime(HorizontalCoordinates hCoordinates,
+                                                                                unsigned int day,  unsigned int month,  unsigned int year,
+                                                                                unsigned int hours, unsigned int minutes, unsigned int seconds)
+{
+    EquatorialCoordinates eqCoordinates;
+    
+    if( !isnan(longitudeOnEarth) && !isnan(latitudeOnEarth) )
+    {
+        
+        JulianDay jd = Calendar::julianDayForDate(day, month, year);
+        
+        float T = T_WITH_JD(jd.day,jd.time);
+        
+        float meanSideralTime = meanGreenwichSiderealTimeAtDateAndTime(day, month, year, hours, minutes, seconds);
+        
+        float deltaNutation;
+        float epsilon = obliquityAndNutationForT(T, NULL, &deltaNutation);
+        
+        // Apparent sideral time in floating hours
+        float theta0 = meanSideralTime + (deltaNutation/15*COSD(epsilon))/3600;
+        
+        
+        // Geographic longitude in floating hours
+        float L = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth);
+        
+        // Geographic latitude in floating degrees
+        float phi = latitudeOnEarth;
+        
+        // Compute local horizontal coordinates (note: RA will contain H)
+        eqCoordinates = horizontalToEquatorial(hCoordinates.azi, hCoordinates.alt, phi);
+
+        // Compute RA according to H
+        // RA = theta0 - L - H;        
+        eqCoordinates.ra = theta0 - L - eqCoordinates.ra;
+        eqCoordinates.ra = LIMIT_HOURS_TO_24(eqCoordinates.ra);
+    }
+    else
+    {
+        eqCoordinates.ra  = NAN;
+        eqCoordinates.dec = NAN;
+    }
+    
+    return eqCoordinates;
+}
+
 float Ephemeris::apparentSideralTime(unsigned int day,  unsigned int month,  unsigned int year,
                                      unsigned int hours, unsigned int minutes, unsigned int seconds)
 {
     JulianDay jd = Calendar::julianDayForDate(day, month, year);
     
-    float T        = (jd.day-2451545.0+jd.time)/36525;
+    float T        = T_WITH_JD(jd.day,jd.time);
     float TSquared = T*T;
     float TCubed   = TSquared*T;
     
@@ -314,7 +361,7 @@ float Ephemeris::sumELP2000Coefs(const float *moonMultCoefficients, const ELP200
 
 EquatorialCoordinates  Ephemeris::equatorialCoordinatesForEarthsMoonAtJD(JulianDay jd, float *distance)
 {
-    float T        = (jd.day-2451545.0+jd.time)/36525;
+    float T        = T_WITH_JD(jd.day,jd.time);
     float TSquared = T*T;
     float TCubed   = TSquared*T;
     float T4       = TCubed*T;
@@ -389,7 +436,7 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForSunAtJD(JulianDay jd, 
 {
     EquatorialCoordinates sunCoordinates;
     
-    float T        = (jd.day-2451545.0+jd.time)/36525;
+    float T        = T_WITH_JD(jd.day,jd.time);
     float TSquared = T*T;
     
     float L0 = 280.46646 + T*36000.76983 + TSquared*0.0003032;
@@ -630,6 +677,25 @@ HorizontalCoordinates Ephemeris::equatorialToHorizontal(float H, float delta, fl
     return coordinates;
 }
 
+EquatorialCoordinates Ephemeris::horizontalToEquatorial(float azimuth, float altitude, float latitude)
+{
+    EquatorialCoordinates coordinates;
+
+    azimuth  = DEGREES_TO_RADIANS(azimuth-180); // -180 -> North is 0°
+    altitude = DEGREES_TO_RADIANS(altitude);
+    latitude = DEGREES_TO_RADIANS(latitude);
+    
+    
+    coordinates.ra = atan2(sin(azimuth), cos(azimuth)*sin(latitude)+tan(altitude)*cos(latitude));
+    coordinates.ra = RADIANS_TO_HOURS(coordinates.ra);
+    coordinates.ra = LIMIT_HOURS_TO_24(coordinates.ra);
+    
+    coordinates.dec = asin(sin(latitude)*sin(altitude)-cos(latitude)*cos(altitude)*cos(azimuth));
+    coordinates.dec = RADIANS_TO_DEGREES(coordinates.dec);
+    
+    return coordinates;
+}
+
 EquatorialCoordinates Ephemeris::EclipticToEquatorial(float lambda, float beta, float epsilon)
 {
     lambda  = DEGREES_TO_RADIANS(lambda);
@@ -664,7 +730,7 @@ float Ephemeris::meanGreenwichSiderealTimeAtDateAndTime(unsigned int day,   unsi
     float meanGreenwichSiderealTime;
     
     JulianDay jd0 = Calendar::julianDayForDateAndTime(day, month, year, 0, 0, 0);
-    float T0        = jd0.day/36525.0-2451545.0/36525.0+jd0.time/36525.0;
+    float T0        = T_WITH_JD(jd0.day,jd0.time);
     float T0Squared = T0*T0;
     float T0Cubed   = T0Squared*T0;
     
@@ -691,8 +757,7 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
     
     JulianDay jd = Calendar::julianDayForDateAndTime(day, month, year, hours, minutes, seconds);
     
-    float T = jd.day/36525.0-2451545.0/36525.0+jd.time/36525.0;
-    
+    float T = T_WITH_JD(jd.day,jd.time);
     
     // Equatorial coordinates
     if( solarSystemObjectIndex == Sun )
@@ -771,7 +836,7 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
     
     if( !isnan(longitudeOnEarth) && !isnan(latitudeOnEarth) )
     {
-        // Geographic longitude in floating degrees
+        // Geographic longitude in floating hours
         float L = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth);
         
         // Geographic latitude in floating degrees
@@ -810,7 +875,7 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForPlanetAtJD(SolarSystem
     coordinates.ra  = 0;
     coordinates.dec = 0;
     
-    float T      = (jd.day-2451545.0+jd.time)/36525;
+    float T      = T_WITH_JD(jd.day,jd.time);
     float lastT  = 0;
     float TLight = 0;
     HeliocentricCoordinates hcPlanet;
@@ -829,7 +894,7 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForPlanetAtJD(SolarSystem
         lastT = T;
         
         float jd2 = (jd.day+jd.time) - TLight;
-        T = (jd2-2451545.0)/36525;
+        T = T_WITH_JD(jd2,0);
         
         hcPlanet   = Ephemeris::heliocentricCoordinatesForPlanetAndT(solarSystemObjectIndex, T);
         if( isnan(hcPlanet.radius)  )

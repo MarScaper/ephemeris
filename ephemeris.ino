@@ -193,7 +193,7 @@ void setup()
   Serial.println(")");
   printSolarSystemObjects(day, month, year, hour, minute, second);
 
-  Serial.println("Benchmarking...");
+  Serial.println("Benchmarking Solar system...");
   float startTime = millis();
   for(int num = Sun; num<= Neptune; num++ )
   {
@@ -204,6 +204,26 @@ void setup()
   Serial.print("Elapsed time: ");
   Serial.print(elapsedTime);
   Serial.println("s");
+
+  Serial.println("_____________________________________");
+  Serial.println("Testing coordinates transformations:");
+    
+  EquatorialCoordinates polarStarEqCoord;
+  polarStarEqCoord.ra  = Ephemeris::hoursMinutesSecondsToFloatingHours(2, 31, 49);      // 2h31m49s
+  polarStarEqCoord.dec = Ephemeris::degreesMinutesSecondsToFloatingDegrees(89, 15, 51); // +89° 15′ 51″
+  printEquatorialCoordinates(polarStarEqCoord);
+  
+  Serial.println("Convert RA/Dec to Alt/Az:");
+  HorizontalCoordinates polarStarHCoord = Ephemeris::equatorialToHorizontalCoordinatesAtDateAndTime(polarStarEqCoord,
+                                                                                                      day, month, year,
+                                                                                                      hour, minute, second);
+  printHorizontalCoordinates(polarStarHCoord);
+
+  Serial.println("Convert Alt/Az back to RA/Dec:");
+  polarStarEqCoord = Ephemeris::horizontalToEquatorialCoordinatesAtDateAndTime(polarStarHCoord,
+                                                                               day, month, year,
+                                                                               hour, minute, second);
+  printEquatorialCoordinates(polarStarEqCoord);
 
   return;
 }
