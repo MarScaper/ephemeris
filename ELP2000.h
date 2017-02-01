@@ -36,12 +36,6 @@ struct ELP2000Coefficient
     char F;
 };
 
-struct RCoefficient
-{
-    char  signR;
-    float sqrtR;
-};
-
 CONST float LMoonCoefficients[] =
 {
     6288774,
@@ -269,8 +263,6 @@ CONST ELP2000Coefficient BMoonAngleCoefficients[] =
     { 0,  0,  0,  3,  1 },
     { 0,  4,  0,  0, -1 },
     { 0,  4,  0, -1,  1 },
-    
-    //Ec  D   M   Mp  F
     { 0,  0,  0,  1, -3 },
     { 0,  4,  0, -2,  1 },
     { 0,  2,  0,  0, -3 },
@@ -380,8 +372,6 @@ CONST ELP2000Coefficient RMoonAngleCoefficients[] =
     { 1,  2, -1,  1,  0 },
     { 0,  4,  0,  0,  0 },
     { 0,  2,  0,  2,  0 },
-    
-    //Ec  D   M   Mp  F
     { 0,  2,  0,  0, -2 },
     { 1,  2, -1, -2,  0 },
     { 2,  2, -2,  0,  0 },

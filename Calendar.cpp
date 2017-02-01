@@ -1,5 +1,21 @@
 /*
  * Calendar.cpp
+ *
+ * Copyright (c) 2017 by Sebastien MARCHAND (Web:www.marscaper.com, Email:sebastien@marscaper.com)
+ */
+/*
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #if ARDUINO
@@ -38,10 +54,10 @@ JulianDay Calendar::julianDayForDate(float day, unsigned int month, unsigned int
     return julianDay;
 }
 
-JulianDay Calendar::julianDayForDateAndTime(unsigned int day, unsigned int month, unsigned int year,
-                                            unsigned int hour, unsigned int minute, unsigned int second)
+JulianDay Calendar::julianDayForDateAndTime(unsigned int day,   unsigned int month,   unsigned int year,
+                                            unsigned int hours, unsigned int minutes, unsigned int seconds)
 {
-    return julianDayForDate(day+ hour/24.0 + minute/1440.0 + second/86400.0,month,year);
+    return julianDayForDate(day+ hours/24.0 + minutes/1440.0 + seconds/86400.0,month,year);
 }
 
 
@@ -66,7 +82,7 @@ void Calendar::dateForJulianDay(JulianDay julianDay, float *day, unsigned int *m
     else
     {
         long alpha = INT((Z-1867216.25)/36524.25);
-        A     = Z+1+alpha-INT(alpha/4);
+        A = Z+1+alpha-INT(alpha/4);
     }
     
     long B = A + 1524;
@@ -97,7 +113,7 @@ void Calendar::dateForJulianDay(JulianDay julianDay, float *day, unsigned int *m
 }
 
 void Calendar::dateAndTimeForJulianDay(JulianDay julianDay, unsigned int *day, unsigned int *month, unsigned int *year,
-                                       unsigned int *hour, unsigned int *minute, unsigned int *second)
+                                       unsigned int *hours, unsigned int *minutes, unsigned int *seconds)
 {
     // Calculate date with float value for day.
     float floatingDay;
@@ -110,9 +126,9 @@ void Calendar::dateAndTimeForJulianDay(JulianDay julianDay, unsigned int *day, u
     floatingDay -= *day;
     
     // Calculate hour,minute,second
-    *hour   = floatingDay*24;
-    *minute = floatingDay*1440-*hour*60;
-    *second = floatingDay*86400-*hour*3600-*minute*60;
+    *hours   = floatingDay*24;
+    *minutes = floatingDay*1440-*hours*60;
+    *seconds = floatingDay*86400-*hours*3600-*minutes*60;
     
     return;
 }
@@ -126,4 +142,3 @@ unsigned int Calendar::weekDayForJulianDay(JulianDay julianDay)
 {
     return (unsigned int)(julianDay.day+julianDay.time+1.5)%7;
 }
-

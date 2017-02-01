@@ -1,5 +1,21 @@
 /*
  * Calendar.hpp
+ *
+ * Copyright (c) 2017 by Sebastien MARCHAND (Web:www.marscaper.com, Email:sebastien@marscaper.com)
+ */
+/*
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef Calendar_h
@@ -26,14 +42,14 @@ public:
     
     static JulianDay julianDayForDate(float day, unsigned int month, unsigned int year);
     
-    static JulianDay julianDayForDateAndTime(unsigned int day, unsigned int month, unsigned int year,
-                                             unsigned int hour, unsigned int minute, unsigned int second);
+    static JulianDay julianDayForDateAndTime(unsigned int day,   unsigned int month,   unsigned int year,
+                                             unsigned int hours, unsigned int minutes, unsigned int seconds);
     
     static void dateForJulianDay(JulianDay julianDay, float *day, unsigned int *month, unsigned int *year);
     
     static void dateAndTimeForJulianDay(JulianDay julianDay,
-                                        unsigned int *day,  unsigned int *month,  unsigned int *year,
-                                        unsigned int *hour, unsigned int *minute, unsigned int *second);
+                                        unsigned int *day,   unsigned int *month,   unsigned int *year,
+                                        unsigned int *hours, unsigned int *minutes, unsigned int *seconds);
     
     static unsigned int weekDayForDate(unsigned int day, unsigned int month, unsigned int year);
     
@@ -41,4 +57,3 @@ public:
 };
 
 #endif
-
