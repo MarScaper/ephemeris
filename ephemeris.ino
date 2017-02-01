@@ -199,7 +199,7 @@ void setup()
   {
     SolarSystemObject solarSystemObject = Ephemeris::solarSystemObjectAtDateAndTime((SolarSystemObjectIndex)num, day, month, year, hour, minute, second);
   }
-  float elapsedTime = ((double)millis() - startTime) / (double)1000;
+  float elapsedTime = ((float)millis() - startTime) / (float)1000;
 
   Serial.print("Elapsed time: ");
   Serial.print(elapsedTime);
