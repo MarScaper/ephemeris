@@ -5,7 +5,7 @@
 Simple C++ library allowing to compute planet coordinates (equatorial and horizontal) with an Arduino Mega. The code is also compatible with PC.
 
 ## Features
-- Compute equatorial coordinates (RA/Dec), horizontal coordinates (Alt/Az), distance (in A.U), and apparent diameter (in arcminutes) for Sun, Mercury, Venus, Mars, Earth's Moon, Mars, Jupiter, Saturn, Uranus, Neptune.
+- Compute equatorial coordinates (RA/Dec), horizontal coordinates (Alt/Az), distance (in A.U), and apparent diameter (in arcminutes) for Sun, Mercury, Venus, Earth's Moon, Mars, Jupiter, Saturn, Uranus, Neptune.
 - Uses VSOP87 for planets.
 - Uses VSOP87 for the Moon.
 - Code optimized for single-precision calculations with Arduino.
