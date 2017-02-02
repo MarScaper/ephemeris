@@ -463,7 +463,7 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForSunAtJD(JulianDay jd, 
         float Cj = 157.23 + 32964.4673*T;  // Jupiter
         float Dm = 297.85 + 445267.1117*T; // Moon
         float E  = 252.08 + 20.19 *T;
-        //float H  = 42.43  + 65928.9358*T;
+        float H  = 42.43  + 65928.9358*T;
         
         O +=
         + 0.00134 * COSD(Av)
@@ -472,12 +472,12 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForSunAtJD(JulianDay jd, 
         + 0.00180 * SIND(Dm)
         + 0.00196 * SIND(E);
         
-        /*v +=
+        v +=
          + 0.00000542 * SIND(Av)
          + 0.00001576 * SIND(Bv)
          + 0.00001628 * SIND(Cj)
          + 0.00003084 * COSD(Dm)
-         + 0.00000925 * SIND(H);*/
+         + 0.00000925 * SIND(H);
     }
     
     // R
@@ -1181,6 +1181,7 @@ HeliocentricCoordinates  Ephemeris::heliocentricCoordinatesForPlanetAndT(SolarSy
             break;
             
         default:
+            
             // Do not work for Moon...
             l0 = NAN;
             l1 = NAN;
