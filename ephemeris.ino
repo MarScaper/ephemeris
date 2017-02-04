@@ -142,6 +142,30 @@ void printPlanet(char *solarSystemObjectName, SolarSystemObjectIndex index, int 
   printEquatorialCoordinates(solarSystemObject.equaCoordinates);
   printHorizontalCoordinates(solarSystemObject.horiCoordinates);
 
+  if( solarSystemObject.riseAndSetState == RiseAndSetOk )
+  {
+    int hour,minute;
+    float second;
+    
+    Ephemeris::floatingHoursToHoursMinutesSeconds(solarSystemObject.rise, &hour, &minute, &second);
+    Serial.print("Rise: ");
+    Serial.print(hour);
+    Serial.print("h");
+    Serial.print(minute);
+    Serial.print("m");
+    Serial.print(second);
+    Serial.println("s");
+
+    Ephemeris::floatingHoursToHoursMinutesSeconds(solarSystemObject.set, &hour, &minute, &second);
+    Serial.print("Set:  ");
+    Serial.print(hour);
+    Serial.print("h");
+    Serial.print(minute);
+    Serial.print("m");
+    Serial.print(second);
+    Serial.println("s");
+  }
+
   if( isnan(solarSystemObject.diameter) )
   {
     // Do not work for Earth of course...

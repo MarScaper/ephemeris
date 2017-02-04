@@ -90,6 +90,14 @@ enum SolarSystemObjectIndex
     EarthsMoon = 9
 };
 
+enum RiseAndSetState
+{
+    LocationOnEarthUnitialized,
+    RiseAndSetOk,
+    ObjectAlwaysInSky,
+    ObjectNeverInSky
+};
+
 /*! This structure describes a planet for a specific date and time. */
 struct SolarSystemObject
 {
@@ -104,6 +112,15 @@ struct SolarSystemObject
     
     /*! Distance from earth in astronomical unit. */
     float distance;
+    
+    /*! Rise/Set state. */
+    RiseAndSetState riseAndSetState;
+    
+    /*! Rise in floating hours. */
+    float rise;
+    
+    /*! Set in floating hours. */
+    float set;
 };
 
 /*! This structure describes planetary orbit. */
@@ -183,12 +200,24 @@ public:
                                                             unsigned int hours, unsigned int minutes, unsigned int seconds);
     
     
+    
+    /*! Compute rise and set for the equatorial coordinates we want. */
+    static RiseAndSetState riseAndSetForEquatorialCoordinatesAtDateAndTime(EquatorialCoordinates coord,
+                                                                           float *rise, float *set,
+                                                                           unsigned int day,  unsigned int month,  unsigned int year,
+                                                                           unsigned int hours, unsigned int minutes, unsigned int seconds);
+    
 private:
     
     /*! Compute apparent sideral time (in floating hours) for a given date and time.
      *  Reference: Chapter 7, page 35: Temps sidéral à Greenwich. */
     static float apparentSideralTime(unsigned int day,   unsigned int month,   unsigned int year,
                                      unsigned int hours, unsigned int minutes, unsigned int seconds);
+    
+    /*! Compute mean sideral time for Greenwich.
+     *  Reference: Chapter 7, page 35: Temps sidéral à Greenwich. */
+    static float meanGreenwichSiderealTimeAtDateAndTime(unsigned int day,   unsigned int month,   unsigned int year,
+                                                        unsigned int hours, unsigned int minutes, unsigned int seconds);
     
     /*! Compute heliocentric coordinates.
      *  Reference: Chapter 22, page 83: Position des planètes. */
@@ -214,10 +243,7 @@ private:
      *  Reference: Chapter 23,  page 87: Mouvement elliptique. */
     static RectangularCoordinates HeliocentricToRectangular(HeliocentricCoordinates hc, HeliocentricCoordinates hc0);
     
-    /*! Compute mean sideral time for Greenwich.
-     *  Reference: Chapter 7, page 35: Temps sidéral à Greenwich. */
-    static float meanGreenwichSiderealTimeAtDateAndTime(unsigned int day,   unsigned int month,   unsigned int year,
-                                                        unsigned int hours, unsigned int minutes, unsigned int seconds);
+    
     
     /*! Compute the true obliquity (angle in floating degrees) of the ecliptic,
      *  delta obliquity and delta nutation for T.
@@ -237,19 +263,23 @@ private:
      *  Reference: Chapter 16, page 63: Les coordonnées du soleil. */
     static EquatorialCoordinates equatorialCoordinatesForSunAtJD(JulianDay jd, float *distance);
     
-    /*! Compute planet equatorial coordinates (and geocentric if needed) for a a specific Julian day. 
-     *  Reference: Chapter 23, page 87: Mouvement elliptique. 
+    /*! Compute planet equatorial coordinates (and geocentric if needed) for a a specific Julian day.
+     *  Reference: Chapter 23, page 87: Mouvement elliptique.
      *             Chapter 8,  page 37: Transformation de coordonnées. */
     static EquatorialCoordinates equatorialCoordinatesForPlanetAtJD(SolarSystemObjectIndex planet, JulianDay jd, float *distance);
     
     /*! Compute VSOP87 (Planets) coefficients for T.
-      *  Reference: Chapter 22, page 83: Position des planètes. */
+     *  Reference: Chapter 22, page 83: Position des planètes. */
     static float sumVSOP87Coefs(const VSOP87Coefficient *valuePlanetCoefficients, int coefCount, float T);
     
-    /*! Compute ELP2000 (Earth's Moon) coefficients for T. 
+    /*! Compute ELP2000 (Earth's Moon) coefficients for T.
      *  Reference: Chapter 28, page 109: Position de la Lune. */
     static float sumELP2000Coefs(const float *moonCoefficients, const ELP2000Coefficient *moonAngleCoefficients, int coefCount,
-                                 float E, float D, float M, float Mp, float F, bool squareMultiplicator);    
+                                 float E, float D, float M, float Mp, float F, bool squareMultiplicator);
+    
+    /*! Compute rise and set for specified equatorial coordinates, T0 (Mean sideral time at midnight), paralax, apparent diameter, and altitude. */
+    static RiseAndSetState riseAndSetForEquatorialCoordinatesAndT0(EquatorialCoordinates coord, float T0, float *rise, float *set,
+                                                                   float paralax, float apparentDiameter, float altitude);
 };
 
 #endif

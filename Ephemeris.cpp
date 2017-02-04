@@ -35,9 +35,8 @@
 #define SIND(value)   sin((value)*0.0174532925)
 #define COSD(value)   cos((value)*0.0174532925)
 #define TAND(value)   tan((value)*0.0174532925)
-#define ASIND(value) asin((value)*0.0174532925)
-#define ACOSD(value) acos((value)*0.0174532925)
-#define ATAND(value) atan((value)*0.0174532925)
+
+#define ACOSD(value)  (acos((value))*57.2957795131);
 
 // Limit range
 #define LIMIT_DEGREES_TO_360(value) (value) >= 0 ? ((value)-(long)((value)*0.0027777778)*360) : (((value)-(long)((value)*0.0027777778)*360)+360)
@@ -70,12 +69,12 @@ static float longitudeOnEarth = NAN;
 
 void Ephemeris::floatingHoursToHoursMinutesSeconds(float floatingHours, int *hours, int *minutes, float *seconds)
 {
-    // Calculate hour,minute,second
+    // Calculate hours, minutes, seconds
     if( floatingHours >= 0 )
     {
         *hours   = (int)floatingHours;
-        *minutes = floatingHours*60-*hours*60;
-        *seconds = floatingHours*3600-*hours*3600-*minutes*60;
+        *minutes = floatingHours*60-(long)(*hours)*60;
+        *seconds = floatingHours*3600-(long)(*hours)*3600-(long)(*minutes)*60;
     }
     else
     {
@@ -193,9 +192,9 @@ EquatorialCoordinates Ephemeris::horizontalToEquatorialCoordinatesAtDateAndTime(
         
         // Compute local horizontal coordinates (note: RA will contain H)
         eqCoordinates = horizontalToEquatorial(hCoordinates.azi, hCoordinates.alt, phi);
-
+        
         // Compute RA according to H
-        // RA = theta0 - L - H;        
+        // RA = theta0 - L - H;
         eqCoordinates.ra = theta0 - L - eqCoordinates.ra;
         eqCoordinates.ra = LIMIT_HOURS_TO_24(eqCoordinates.ra);
     }
@@ -473,11 +472,11 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForSunAtJD(JulianDay jd, 
         + 0.00196 * SIND(E);
         
         v +=
-         + 0.00000542 * SIND(Av)
-         + 0.00001576 * SIND(Bv)
-         + 0.00001628 * SIND(Cj)
-         + 0.00003084 * COSD(Dm)
-         + 0.00000925 * SIND(H);
+        + 0.00000542 * SIND(Av)
+        + 0.00001576 * SIND(Bv)
+        + 0.00001628 * SIND(Cj)
+        + 0.00003084 * COSD(Dm)
+        + 0.00000925 * SIND(H);
     }
     
     // R
@@ -680,7 +679,7 @@ HorizontalCoordinates Ephemeris::equatorialToHorizontal(float H, float delta, fl
 EquatorialCoordinates Ephemeris::horizontalToEquatorial(float azimuth, float altitude, float latitude)
 {
     EquatorialCoordinates coordinates;
-
+    
     azimuth  = DEGREES_TO_RADIANS(azimuth-180); // -180 -> North is 0°
     altitude = DEGREES_TO_RADIANS(altitude);
     latitude = DEGREES_TO_RADIANS(latitude);
@@ -846,6 +845,40 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
         float H = (theta0-L-solarSystemObject.equaCoordinates.ra)*15;
         
         solarSystemObject.horiCoordinates = equatorialToHorizontal(H,solarSystemObject.equaCoordinates.dec,phi);
+        
+        // Mean sideral time at midnight
+        float T0 = Ephemeris::meanGreenwichSiderealTimeAtDateAndTime(day, month, year, 0, 0, 0);
+        
+        // Compute rise and set
+        switch (solarSystemObjectIndex)
+        {
+            case Sun:
+                solarSystemObject.riseAndSetState = riseAndSetForEquatorialCoordinatesAndT0(solarSystemObject.equaCoordinates,
+                                                                                            T0,
+                                                                                            &solarSystemObject.rise, &solarSystemObject.set,
+                                                                                            0,
+                                                                                            solarSystemObject.diameter/60.0,
+                                                                                            0);
+                break;
+                
+            case EarthsMoon:
+                solarSystemObject.riseAndSetState = riseAndSetForEquatorialCoordinatesAndT0(solarSystemObject.equaCoordinates,
+                                                                                            T0,
+                                                                                            &solarSystemObject.rise, &solarSystemObject.set,
+                                                                                            57/60.0,
+                                                                                            solarSystemObject.diameter/60.0,
+                                                                                            0);
+                break;
+                
+            default:
+                solarSystemObject.riseAndSetState = riseAndSetForEquatorialCoordinatesAndT0(solarSystemObject.equaCoordinates,
+                                                                                            T0,
+                                                                                            &solarSystemObject.rise, &solarSystemObject.set,
+                                                                                            0,
+                                                                                            0,
+                                                                                            0);
+                break;
+        }
     }
     else
     {
@@ -1220,4 +1253,66 @@ HeliocentricCoordinates  Ephemeris::heliocentricCoordinatesForPlanetAndT(SolarSy
     coordinates.radius = (r0 + r1*T + r2*TSquared + r3*TCubed + r4*T4 + r5*T5)/100000000.0;
     
     return coordinates;
+}
+
+RiseAndSetState  Ephemeris::riseAndSetForEquatorialCoordinatesAndT0(EquatorialCoordinates coord, float T0, float *rise, float *set,
+                                                                    float paralax, float apparentDiameter, float altitude)
+{
+    if( isnan(longitudeOnEarth) && isnan(latitudeOnEarth) )
+    {
+        *rise = NAN;
+        *set  = NAN;
+        
+        return LocationOnEarthUnitialized;
+    }
+    
+    float lon = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth);
+    float lat = latitudeOnEarth;
+    
+    // Altitude angle
+    float n1 = ACOSD(6378140/(6378140 + altitude));
+    
+    // h0 = P - R - 1/2 d - η1
+    // P: Parallax in degrees (57' for the moon and 0 for others).
+    // R: Refraction of Radau in degrees
+    // d: Apparent diameter in degrees (32' for moon en sun).
+    // n1 Altitude parameter
+    float h0 = paralax - 34/60.0 -apparentDiameter/2 - n1;
+    
+    // cos H = (sin(h0) - sin(φ) sin(δ))/(cos(φ) cos (δ))
+    float cosH = (SIND(h0) - SIND(lat)*SIND(coord.dec))/(COSD(lat)*COSD(coord.dec));
+    
+    if( cosH < -1 )
+    {
+        *rise = NAN;
+        *set  = NAN;
+        
+        return ObjectAlwaysInSky;
+    }
+    else if( cosH > 1 )
+    {
+        *rise = NAN;
+        *set  = NAN;
+        
+        return ObjectNeverInSky;
+    }
+    
+    float H = ACOSD(cosH);
+    H = DEGREES_TO_FLOATING_HOURS(H);
+    
+    *rise = LIMIT_HOURS_TO_24(coord.ra - H + lon - T0)/1.0027379094;
+    *set  = LIMIT_HOURS_TO_24(coord.ra + H + lon - T0)/1.0027379094;
+    
+    return RiseAndSetOk;
+}
+
+RiseAndSetState Ephemeris::riseAndSetForEquatorialCoordinatesAtDateAndTime(EquatorialCoordinates coord,
+                                                                           float *rise, float *set,
+                                                                           unsigned int day,  unsigned int month,  unsigned int year,
+                                                                           unsigned int hours, unsigned int minutes, unsigned int seconds)
+{
+    // Mean sideral time at midnight
+    float T0 = Ephemeris::meanGreenwichSiderealTimeAtDateAndTime(day, month, year, 0, 0, 0);
+    
+    return riseAndSetForEquatorialCoordinatesAndT0(coord, T0, rise, set, 0, 0, 0);
 }
