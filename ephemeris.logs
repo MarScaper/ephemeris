@@ -5,8 +5,8 @@ R.A:  01h17m00s.65
 Dec:  08d08'00".12
 Azi: 292.30d
 Alt: -8.08d
-Rise: 5h11m24.15s
-Set:  18h34m50.90s
+Rise: 5h10m16.53s
+Set:  18h34m40.20s
 Dist: 1.002 AU
 Diam: 31.93'
 _____________________________________
@@ -94,7 +94,7 @@ Dist: 30.690 AU
 Diam: 2.22"
 _____________________________________
 Benchmarking Solar system...
-Elapsed time: 1.56s
+Elapsed time: 1.58s
 _____________________________________
 Testing coordinates transformations:
 R.A:  02h31m49s.00

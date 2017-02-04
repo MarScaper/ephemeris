@@ -855,12 +855,57 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
         switch (solarSystemObjectIndex)
         {
             case Sun:
-                solarSystemObject.riseAndSetState = riseAndSetForEquatorialCoordinatesAndT0(solarSystemObject.equaCoordinates,
+                
+                //
+                // Assume Sun speed to be linear for 24 hour range
+                //
+                
+                tmpCoord0  = equatorialCoordinatesForSunAtJD(Calendar::julianDayForDateAndTime(day, month, year, 0, 0, 0), NULL);
+                tmpCoord24 = equatorialCoordinatesForSunAtJD(Calendar::julianDayForDateAndTime(day, month, year, 24, 0, 0), NULL);
+                
+                linearSpeedRA  = (tmpCoord24.ra  - tmpCoord0.ra);
+                linearSpeedDec = (tmpCoord24.dec - tmpCoord0.dec);
+                
+                // First approximation at midday
+                tmpCoord.ra  = tmpCoord0.ra  + linearSpeedRA*0.5;
+                tmpCoord.dec = tmpCoord0.dec + linearSpeedDec*0.5;
+                solarSystemObject.riseAndSetState = riseAndSetForEquatorialCoordinatesAndT0(tmpCoord,
                                                                                             T0,
                                                                                             &solarSystemObject.rise, &solarSystemObject.set,
                                                                                             0,
                                                                                             solarSystemObject.diameter/60.0,
                                                                                             0);
+                
+                if( !isnan(solarSystemObject.rise) )
+                {
+                    // Now interpolate coordinates at rise time estimation
+                    tmpCoord.ra  = tmpCoord0.ra  + linearSpeedRA*solarSystemObject.rise/24.0;
+                    tmpCoord.dec = tmpCoord0.dec + linearSpeedDec*solarSystemObject.rise/24.0;
+                    
+                    // Compute new coordinates to improve precision
+                    riseAndSetForEquatorialCoordinatesAndT0(tmpCoord,
+                                                            T0,
+                                                            &solarSystemObject.rise, NULL,
+                                                            0,
+                                                            solarSystemObject.diameter/60.0,
+                                                            0);
+                }
+                
+                if( !isnan(solarSystemObject.set) )
+                {
+                    // Now interpolate coordinates at set time estimation
+                    tmpCoord.ra  = tmpCoord0.ra  + linearSpeedRA*solarSystemObject.set/24.0;
+                    tmpCoord.dec = tmpCoord0.dec + linearSpeedDec*solarSystemObject.set/24.0;
+                    
+                    // Compute new coordinates to improve precision
+                    riseAndSetForEquatorialCoordinatesAndT0(tmpCoord,
+                                                            T0,
+                                                            NULL, &solarSystemObject.set,
+                                                            0,
+                                                            solarSystemObject.diameter/60.0,
+                                                            0);
+                }
+                
                 break;
                 
             case EarthsMoon:
