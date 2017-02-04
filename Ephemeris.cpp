@@ -81,8 +81,8 @@ void Ephemeris::floatingHoursToHoursMinutesSeconds(float floatingHours, int *hou
         floatingHours = floatingHours*-1;
         
         *hours   = (int)floatingHours;
-        *minutes = floatingHours*60-*hours*60;
-        *seconds = floatingHours*3600-*hours*3600-*minutes*60;
+        *minutes = floatingHours*60-(long)(*hours)*60;
+        *seconds = floatingHours*3600-(long)(*hours)*3600-(long)(*minutes)*60;
         
         *hours = *hours*-1;
     }
@@ -850,6 +850,8 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
         float T0 = Ephemeris::meanGreenwichSiderealTimeAtDateAndTime(day, month, year, 0, 0, 0);
         
         // Compute rise and set
+        EquatorialCoordinates tmpCoord,tmpCoord0,tmpCoord24;
+        float linearSpeedRA,linearSpeedDec;
         switch (solarSystemObjectIndex)
         {
             case Sun:
@@ -862,12 +864,57 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                 break;
                 
             case EarthsMoon:
-                solarSystemObject.riseAndSetState = riseAndSetForEquatorialCoordinatesAndT0(solarSystemObject.equaCoordinates,
+
+                //
+                // Assume Moon speed to be linear for 24 hour range
+                //
+                
+                tmpCoord0  = equatorialCoordinatesForEarthsMoonAtJD(Calendar::julianDayForDateAndTime(day, month, year, 0, 0, 0), NULL);
+                tmpCoord24 = equatorialCoordinatesForEarthsMoonAtJD(Calendar::julianDayForDateAndTime(day, month, year, 24, 0, 0), NULL);
+                
+                linearSpeedRA  = (tmpCoord24.ra  - tmpCoord0.ra);
+                linearSpeedDec = (tmpCoord24.dec - tmpCoord0.dec);
+                
+                // First approximation at midday
+                tmpCoord.ra  = tmpCoord0.ra  + linearSpeedRA*0.5;
+                tmpCoord.dec = tmpCoord0.dec + linearSpeedDec*0.5;
+                solarSystemObject.riseAndSetState = riseAndSetForEquatorialCoordinatesAndT0(tmpCoord,
                                                                                             T0,
                                                                                             &solarSystemObject.rise, &solarSystemObject.set,
                                                                                             57/60.0,
                                                                                             solarSystemObject.diameter/60.0,
                                                                                             0);
+                
+                if( !isnan(solarSystemObject.rise) )
+                {
+                    // Now interpolate coordinates at rise time estimation
+                    tmpCoord.ra  = tmpCoord0.ra  + linearSpeedRA*solarSystemObject.rise/24.0;
+                    tmpCoord.dec = tmpCoord0.dec + linearSpeedDec*solarSystemObject.rise/24.0;
+                    
+                    // Compute new coordinates to improve precision
+                    riseAndSetForEquatorialCoordinatesAndT0(tmpCoord,
+                                                            T0,
+                                                            &solarSystemObject.rise, NULL,
+                                                            57/60.0,
+                                                            solarSystemObject.diameter/60.0,
+                                                            0);
+                }
+                
+                if( !isnan(solarSystemObject.set) )
+                {
+                    // Now interpolate coordinates at set time estimation
+                    tmpCoord.ra  = tmpCoord0.ra  + linearSpeedRA*solarSystemObject.set/24.0;
+                    tmpCoord.dec = tmpCoord0.dec + linearSpeedDec*solarSystemObject.set/24.0;
+                    
+                    // Compute new coordinates to improve precision
+                    riseAndSetForEquatorialCoordinatesAndT0(tmpCoord,
+                                                            T0,
+                                                            NULL, &solarSystemObject.set,
+                                                            57/60.0,
+                                                            solarSystemObject.diameter/60.0,
+                                                            0);
+                }
+
                 break;
                 
             default:
@@ -1284,15 +1331,15 @@ RiseAndSetState  Ephemeris::riseAndSetForEquatorialCoordinatesAndT0(EquatorialCo
     
     if( cosH < -1 )
     {
-        *rise = NAN;
-        *set  = NAN;
+        if( rise ) *rise = NAN;
+        if( set )  *set  = NAN;
         
         return ObjectAlwaysInSky;
     }
     else if( cosH > 1 )
     {
-        *rise = NAN;
-        *set  = NAN;
+        if( rise ) *rise = NAN;
+        if( set )  *set  = NAN;
         
         return ObjectNeverInSky;
     }
@@ -1300,8 +1347,15 @@ RiseAndSetState  Ephemeris::riseAndSetForEquatorialCoordinatesAndT0(EquatorialCo
     float H = ACOSD(cosH);
     H = DEGREES_TO_FLOATING_HOURS(H);
     
-    *rise = LIMIT_HOURS_TO_24(coord.ra - H + lon - T0)/1.0027379094;
-    *set  = LIMIT_HOURS_TO_24(coord.ra + H + lon - T0)/1.0027379094;
+    if( rise )
+    {
+        *rise = LIMIT_HOURS_TO_24(coord.ra - H + lon - T0)/1.0027379094;
+    }
+    
+    if( set )
+    {
+        *set  = LIMIT_HOURS_TO_24(coord.ra + H + lon - T0)/1.0027379094;
+    }
     
     return RiseAndSetOk;
 }
