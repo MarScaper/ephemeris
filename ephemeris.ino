@@ -208,6 +208,10 @@ void setup()
   // Set location on earth for horizontal coordinates transformations
   Ephemeris::setLocationOnEarth(48,50,11,  // Lat: 48°50'11"
                                 -2,20,14); // Lon: -2°20'14"
+
+  // Set altitude to improve rise and set precision
+  Ephemeris::setAltitude(75);
+                                
   // Choose a date and time
   int day=10,month=4,year=2014,hour=19,minute=21,second=0;
 

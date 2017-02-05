@@ -166,7 +166,8 @@ public:
     static void setLocationOnEarth(float latDegrees, float latMinutes, float latSeconds,
                                    float lonDegrees, float lonMinutes, float lonSeconds);
     
-    
+    /*! Set altitude in meters for location on earth (improve precision for rise and set). */
+    static void setAltitude(int altitude);
     
     /*! Convert floating hours to integer hours, minutes, seconds. */
     static void  floatingHoursToHoursMinutesSeconds(float floatingHours, int *hours, int *minutes, float *seconds);
@@ -279,7 +280,7 @@ private:
     
     /*! Compute rise and set for specified equatorial coordinates, T0 (Mean sideral time at midnight), paralax, apparent diameter, and altitude. */
     static RiseAndSetState riseAndSetForEquatorialCoordinatesAndT0(EquatorialCoordinates coord, float T0, float *rise, float *set,
-                                                                   float paralax, float apparentDiameter, float altitude);
+                                                                   float paralax, float apparentDiameter);
 };
 
 #endif

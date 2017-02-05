@@ -66,6 +66,7 @@
 // Observer's coordinates on Earth
 static float latitudeOnEarth  = NAN;
 static float longitudeOnEarth = NAN;
+static int   altitudeOnEarth  = NAN;
 
 void Ephemeris::floatingHoursToHoursMinutesSeconds(float floatingHours, int *hours, int *minutes, float *seconds)
 {
@@ -873,8 +874,7 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                                                                                             T0,
                                                                                             &solarSystemObject.rise, &solarSystemObject.set,
                                                                                             0,
-                                                                                            solarSystemObject.diameter/60.0,
-                                                                                            0);
+                                                                                            solarSystemObject.diameter/60.0);
                 
                 if( !isnan(solarSystemObject.rise) )
                 {
@@ -887,8 +887,7 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                                                             T0,
                                                             &solarSystemObject.rise, NULL,
                                                             0,
-                                                            solarSystemObject.diameter/60.0,
-                                                            0);
+                                                            solarSystemObject.diameter/60.0);
                 }
                 
                 if( !isnan(solarSystemObject.set) )
@@ -902,8 +901,7 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                                                             T0,
                                                             NULL, &solarSystemObject.set,
                                                             0,
-                                                            solarSystemObject.diameter/60.0,
-                                                            0);
+                                                            solarSystemObject.diameter/60.0);
                 }
                 
                 break;
@@ -927,8 +925,7 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                                                                                             T0,
                                                                                             &solarSystemObject.rise, &solarSystemObject.set,
                                                                                             57/60.0,
-                                                                                            solarSystemObject.diameter/60.0,
-                                                                                            0);
+                                                                                            solarSystemObject.diameter/60.0);
                 
                 if( !isnan(solarSystemObject.rise) )
                 {
@@ -941,8 +938,7 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                                                             T0,
                                                             &solarSystemObject.rise, NULL,
                                                             57/60.0,
-                                                            solarSystemObject.diameter/60.0,
-                                                            0);
+                                                            solarSystemObject.diameter/60.0);
                 }
                 
                 if( !isnan(solarSystemObject.set) )
@@ -956,8 +952,7 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                                                             T0,
                                                             NULL, &solarSystemObject.set,
                                                             57/60.0,
-                                                            solarSystemObject.diameter/60.0,
-                                                            0);
+                                                            solarSystemObject.diameter/60.0);
                 }
 
                 break;
@@ -966,7 +961,6 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                 solarSystemObject.riseAndSetState = riseAndSetForEquatorialCoordinatesAndT0(solarSystemObject.equaCoordinates,
                                                                                             T0,
                                                                                             &solarSystemObject.rise, &solarSystemObject.set,
-                                                                                            0,
                                                                                             0,
                                                                                             0);
                 break;
@@ -1348,7 +1342,7 @@ HeliocentricCoordinates  Ephemeris::heliocentricCoordinatesForPlanetAndT(SolarSy
 }
 
 RiseAndSetState  Ephemeris::riseAndSetForEquatorialCoordinatesAndT0(EquatorialCoordinates coord, float T0, float *rise, float *set,
-                                                                    float paralax, float apparentDiameter, float altitude)
+                                                                    float paralax, float apparentDiameter)
 {
     if( isnan(longitudeOnEarth) && isnan(latitudeOnEarth) )
     {
@@ -1362,7 +1356,7 @@ RiseAndSetState  Ephemeris::riseAndSetForEquatorialCoordinatesAndT0(EquatorialCo
     float lat = latitudeOnEarth;
     
     // Altitude angle
-    float n1 = ACOSD(6378140/(6378140 + altitude));
+    float n1 = ACOSD(6378140/(float)(6378140 + altitudeOnEarth));
     
     // h0 = P - R - 1/2 d - η1
     // P: Parallax in degrees (57' for the moon and 0 for others).
@@ -1413,5 +1407,10 @@ RiseAndSetState Ephemeris::riseAndSetForEquatorialCoordinatesAtDateAndTime(Equat
     // Mean sideral time at midnight
     float T0 = Ephemeris::meanGreenwichSiderealTimeAtDateAndTime(day, month, year, 0, 0, 0);
     
-    return riseAndSetForEquatorialCoordinatesAndT0(coord, T0, rise, set, 0, 0, 0);
+    return riseAndSetForEquatorialCoordinatesAndT0(coord, T0, rise, set, 0, 0);
+}
+
+void Ephemeris::setAltitude(int altitude)
+{
+    altitudeOnEarth = altitude;
 }
