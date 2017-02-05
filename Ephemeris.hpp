@@ -20,8 +20,8 @@
 #define Ephemeris_h
 
 #include "Calendar.hpp"
-#include "VSOP87.h"
-#include "ELP2000.h"
+#include "VSOP87.hpp"
+#include "ELP2000.hpp"
 
 /*! This structure describes equatorial coordinates. */
 struct EquatorialCoordinates
