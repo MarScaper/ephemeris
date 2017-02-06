@@ -7,7 +7,7 @@ Simple C++ library allowing to compute planet coordinates (equatorial and horizo
 ## Features
 - Compute equatorial coordinates (RA/Dec), horizontal coordinates (Alt/Az), rise, set, distance (in A.U), and apparent diameter (in arcminutes) for Sun, Mercury, Venus, Earth's Moon, Mars, Jupiter, Saturn, Uranus, Neptune.
 - Uses VSOP87 for planets.
-- Uses VSOP87 for the Moon.
+- Uses ELP2000 for the Moon.
 - Code optimized for single-precision calculations with Arduino.
 
 ## Goodies
