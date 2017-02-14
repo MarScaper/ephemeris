@@ -27,51 +27,51 @@
 struct EquatorialCoordinates
 {
     /*! Floating value for Right Ascension. */
-    float ra;
+    FLOAT ra;
     
     /*! Floating value for Declination */
-    float dec;
+    FLOAT dec;
 };
 
 /*! This structure describes horizontal coordinates. */
 struct HorizontalCoordinates
 {
     /*! Floating value for altitude. */
-    float alt;
+    FLOAT alt;
     
     /*! Floating value for azimuth */
-    float azi;
+    FLOAT azi;
 };
 
 /*! This structure describes Heliocentric ecliptic coordinates. */
 struct HeliocentricCoordinates
 {
     /*! Floating value for ecliptic longitude. */
-    float lon;
+    FLOAT lon;
     
     /*! Floating value for ecliptic latitude.*/
-    float lat;
+    FLOAT lat;
     
     /*! Floating value for radius vector (distance from Sun). */
-    float radius;
+    FLOAT radius;
 };
 
 /*! This structure describes geocentric coordinates. */
 struct GeocentricCoordinates
 {
     /*! Floating value for longitude. */
-    float lon;
+    FLOAT lon;
     
     /*! Floating value for latitude.*/
-    float lat;
+    FLOAT lat;
 };
 
 /*! This structure describes rectangular coordinates. */
 struct RectangularCoordinates
 {
-    float x;
-    float y;
-    float z;
+    FLOAT x;
+    FLOAT y;
+    FLOAT z;
 };
 
 /*! This structure describes available solar system objects for computation of ephemerides. */
@@ -108,47 +108,47 @@ struct SolarSystemObject
     HorizontalCoordinates horiCoordinates;
     
     /*! Apparent diameter from earth in arc minutes. */
-    float diameter;
+    FLOAT diameter;
     
     /*! Distance from earth in astronomical unit. */
-    float distance;
+    FLOAT distance;
     
     /*! Rise/Set state. */
     RiseAndSetState riseAndSetState;
     
     /*! Rise in floating hours. */
-    float rise;
+    FLOAT rise;
     
     /*! Set in floating hours. */
-    float set;
+    FLOAT set;
 };
 
 /*! This structure describes planetary orbit. */
 struct PlanetayOrbit
 {
     /*! Mean longitude. */
-    float L;
+    FLOAT L;
     
     /*! Semimajor axis. */
-    float a;
+    FLOAT a;
     
     /*! Eccentricity. */
-    float e;
+    FLOAT e;
     
     /*! Inclination. */
-    float i;
+    FLOAT i;
     
     /*! Longitude ascending node. */
-    float omega;
+    FLOAT omega;
     
     /*! Perihelion. */
-    float pi;
+    FLOAT pi;
     
     /*! Mean anomaly. */
-    float M;
+    FLOAT M;
     
     /*! Perihelion argument. */
-    float w;
+    FLOAT w;
 };
 
 /*!
@@ -159,27 +159,30 @@ class Ephemeris
     
 public:
     
-    /*! Set location on earth (used for horizontal coordinates conversion). */
-    static void setLocationOnEarth(float floatingLatitude, float floatingLongitude);
+    /*! Flipe longitude coordinate. Default: West is negative and East is positive. */
+    static void flipLongitude(bool flip);
     
     /*! Set location on earth (used for horizontal coordinates conversion). */
-    static void setLocationOnEarth(float latDegrees, float latMinutes, float latSeconds,
-                                   float lonDegrees, float lonMinutes, float lonSeconds);
+    static void setLocationOnEarth(FLOAT floatingLatitude, FLOAT floatingLongitude);
+    
+    /*! Set location on earth (used for horizontal coordinates conversion). */
+    static void setLocationOnEarth(FLOAT latDegrees, FLOAT latMinutes, FLOAT latSeconds,
+                                   FLOAT lonDegrees, FLOAT lonMinutes, FLOAT lonSeconds);
     
     /*! Set altitude in meters for location on earth (improve precision for rise and set). */
     static void setAltitude(int altitude);
     
     /*! Convert floating hours to integer hours, minutes, seconds. */
-    static void  floatingHoursToHoursMinutesSeconds(float floatingHours, int *hours, int *minutes, float *seconds);
+    static void  floatingHoursToHoursMinutesSeconds(FLOAT floatingHours, int *hours, int *minutes, FLOAT *seconds);
     
     /*! Convert integer hours, minutes, seconds to floating hours. */
-    static float hoursMinutesSecondsToFloatingHours(int hours, int minutes, float seconds);
+    static FLOAT hoursMinutesSecondsToFloatingHours(int hours, int minutes, FLOAT seconds);
     
     /*! Convert floating degrees to integer degrees, minutes, seconds. */
-    static void  floatingDegreesToDegreesMinutesSeconds(float floatingDegrees, int *degrees, int *minutes, float *seconds);
+    static void  floatingDegreesToDegreesMinutesSeconds(FLOAT floatingDegrees, int *degrees, int *minutes, FLOAT *seconds);
     
     /*! Convert integer degrees, minutes, seconds to floating degrees. */
-    static float degreesMinutesSecondsToFloatingDegrees(int degrees, int minutes, float seconds);
+    static FLOAT degreesMinutesSecondsToFloatingDegrees(int degrees, int minutes, FLOAT seconds);
     
     
     
@@ -204,41 +207,41 @@ public:
     
     /*! Compute rise and set for the equatorial coordinates we want. */
     static RiseAndSetState riseAndSetForEquatorialCoordinatesAtDateAndTime(EquatorialCoordinates coord,
-                                                                           float *rise, float *set,
+                                                                           FLOAT *rise, FLOAT *set,
                                                                            unsigned int day,  unsigned int month,  unsigned int year,
                                                                            unsigned int hours, unsigned int minutes, unsigned int seconds);
-    
+
 private:
     
     /*! Compute apparent sideral time (in floating hours) for a given date and time.
      *  Reference: Chapter 7, page 35: Temps sidéral à Greenwich. */
-    static float apparentSideralTime(unsigned int day,   unsigned int month,   unsigned int year,
+    static FLOAT apparentSideralTime(unsigned int day,   unsigned int month,   unsigned int year,
                                      unsigned int hours, unsigned int minutes, unsigned int seconds);
     
     /*! Compute mean sideral time for Greenwich.
      *  Reference: Chapter 7, page 35: Temps sidéral à Greenwich. */
-    static float meanGreenwichSiderealTimeAtDateAndTime(unsigned int day,   unsigned int month,   unsigned int year,
+    static FLOAT meanGreenwichSiderealTimeAtDateAndTime(unsigned int day,   unsigned int month,   unsigned int year,
                                                         unsigned int hours, unsigned int minutes, unsigned int seconds);
     
     /*! Compute heliocentric coordinates.
      *  Reference: Chapter 22, page 83: Position des planètes. */
-    static HeliocentricCoordinates heliocentricCoordinatesForPlanetAndT(SolarSystemObjectIndex planet, float T);
+    static HeliocentricCoordinates heliocentricCoordinatesForPlanetAndT(SolarSystemObjectIndex planet, FLOAT T);
     
     /*! Compute Kepler equation.
      *  Reference: Chapter 20, page 73: Equation de Kepler. */
-    static float kepler(float M, float e);
+    static FLOAT kepler(FLOAT M, FLOAT e);
     
     /*! Convert equatorial coordinates to horizontal coordinates.
      *  Reference: Chapter 8,  page 37: Transformation de coordonnées. */
-    static HorizontalCoordinates equatorialToHorizontal(float H, float delta, float phi);
+    static HorizontalCoordinates equatorialToHorizontal(FLOAT H, FLOAT delta, FLOAT phi);
     
     /*! Convert horizontal coordinates to equatorial coordinates.
      *  Reference: Chapter 8,  page 37: Transformation de coordonnées. */
-    static EquatorialCoordinates horizontalToEquatorial(float azimuth, float altitude, float latitude);
+    static EquatorialCoordinates horizontalToEquatorial(FLOAT azimuth, FLOAT altitude, FLOAT latitude);
     
     /*! Convert ecliptic coordinates to equatorial coordinates.
      *  Reference: Chapter 8,  page 37: Transformation de coordonnées. */
-    static EquatorialCoordinates EclipticToEquatorial(float lambda, float beta, float epsilon);
+    static EquatorialCoordinates EclipticToEquatorial(FLOAT lambda, FLOAT beta, FLOAT epsilon);
     
     /*! Convert heliocentric coordinates to rectangular coordinates.
      *  Reference: Chapter 23,  page 87: Mouvement elliptique. */
@@ -249,38 +252,38 @@ private:
     /*! Compute the true obliquity (angle in floating degrees) of the ecliptic,
      *  delta obliquity and delta nutation for T.
      *  Reference: Chapter 13, page 53: Nutation et obliquité de l'écliptique. */
-    static float obliquityAndNutationForT(float T, float *deltaObliquity, float *deltaNutation);
+    static FLOAT obliquityAndNutationForT(FLOAT T, FLOAT *deltaObliquity, FLOAT *deltaNutation);
     
     /*! Compute planet informations for T.
      *  Reference: Chapter 21, page 77: Eléments des orbites planétaires. */
-    static PlanetayOrbit planetayOrbitForPlanetAndT(SolarSystemObjectIndex planet, float T);
+    static PlanetayOrbit planetayOrbitForPlanetAndT(SolarSystemObjectIndex planet, FLOAT T);
     
     /*! Compute Moon coordinates in the sky (R.A.,Dec) for a specific date and time.
      *  Reference: Chapter 28, page 109: Position de la Lune.
      *             Chapter 8,  page 37: Transformation de coordonnées. */
-    static EquatorialCoordinates equatorialCoordinatesForEarthsMoonAtJD(JulianDay jd, float *distance);
+    static EquatorialCoordinates equatorialCoordinatesForEarthsMoonAtJD(JulianDay jd, FLOAT *distance);
     
     /*! Compute Sun coordinates in the sky (R.A.,Dec) for a specific date and time.
      *  Reference: Chapter 16, page 63: Les coordonnées du soleil. */
-    static EquatorialCoordinates equatorialCoordinatesForSunAtJD(JulianDay jd, float *distance);
+    static EquatorialCoordinates equatorialCoordinatesForSunAtJD(JulianDay jd, FLOAT *distance);
     
     /*! Compute planet equatorial coordinates (and geocentric if needed) for a a specific Julian day.
      *  Reference: Chapter 23, page 87: Mouvement elliptique.
      *             Chapter 8,  page 37: Transformation de coordonnées. */
-    static EquatorialCoordinates equatorialCoordinatesForPlanetAtJD(SolarSystemObjectIndex planet, JulianDay jd, float *distance);
+    static EquatorialCoordinates equatorialCoordinatesForPlanetAtJD(SolarSystemObjectIndex planet, JulianDay jd, FLOAT *distance);
     
     /*! Compute VSOP87 (Planets) coefficients for T.
      *  Reference: Chapter 22, page 83: Position des planètes. */
-    static float sumVSOP87Coefs(const VSOP87Coefficient *valuePlanetCoefficients, int coefCount, float T);
+    static FLOAT sumVSOP87Coefs(const VSOP87Coefficient *valuePlanetCoefficients, int coefCount, FLOAT T);
     
     /*! Compute ELP2000 (Earth's Moon) coefficients for T.
      *  Reference: Chapter 28, page 109: Position de la Lune. */
-    static float sumELP2000Coefs(const float *moonCoefficients, const ELP2000Coefficient *moonAngleCoefficients, int coefCount,
-                                 float E, float D, float M, float Mp, float F, bool squareMultiplicator);
+    static FLOAT sumELP2000Coefs(const FLOAT *moonCoefficients, const ELP2000Coefficient *moonAngleCoefficients, int coefCount,
+                                 FLOAT E, FLOAT D, FLOAT M, FLOAT Mp, FLOAT F, bool squareMultiplicator);
     
     /*! Compute rise and set for specified equatorial coordinates, T0 (Mean sideral time at midnight), paralax, apparent diameter, and altitude. */
-    static RiseAndSetState riseAndSetForEquatorialCoordinatesAndT0(EquatorialCoordinates coord, float T0, float *rise, float *set,
-                                                                   float paralax, float apparentDiameter);
+    static RiseAndSetState riseAndSetForEquatorialCoordinatesAndT0(EquatorialCoordinates coord, FLOAT T0, FLOAT *rise, FLOAT *set,
+                                                                   FLOAT paralax, FLOAT apparentDiameter);
 };
 
 #endif

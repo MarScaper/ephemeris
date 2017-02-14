@@ -19,7 +19,11 @@
 #ifndef Ephemeris_library
 #define Ephemeris_library
 
+#if ARDUINO
 #include <Ephemeris.hpp>
+#else
+#include "Ephemeris.hpp"
+#endif
 
 #endif
 

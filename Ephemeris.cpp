@@ -45,8 +45,8 @@
 // Convert degrees
 #define DEGREES_TO_RADIANS(value) ((value)*0.0174532925)
 #define DEGREES_TO_FLOATING_HOURS(value) ((value)*0.0666666667)
-#define DEGREES_MINUTES_SECONDES_TO_SECONDS(deg,min,sec) ((float)(deg)*3600+(float)(min)*60+(float)sec)
-#define DEGREES_MINUTES_SECONDS_TO_DECIMAL_DEGREES(deg,min,sec) (deg) >= 0 ? ((float)(deg)+(float)(min)*0.0166666667+(float)(sec)*0.0002777778) : ((float)(deg)-(float)(min)*0.0166666667-(float)(sec)*0.0002777778)
+#define DEGREES_MINUTES_SECONDES_TO_SECONDS(deg,min,sec) ((FLOAT)(deg)*3600+(FLOAT)(min)*60+(FLOAT)sec)
+#define DEGREES_MINUTES_SECONDS_TO_DECIMAL_DEGREES(deg,min,sec) (deg) >= 0 ? ((FLOAT)(deg)+(FLOAT)(min)*0.0166666667+(FLOAT)(sec)*0.0002777778) : ((FLOAT)(deg)-(FLOAT)(min)*0.0166666667-(FLOAT)(sec)*0.0002777778)
 
 // Convert radians
 #define RADIANS_TO_DEGREES(value) ((value)*57.2957795131)
@@ -54,21 +54,22 @@
 
 // Convert hours
 #define HOURS_TO_RADIANS(value) ((value)*0.261799388)
-#define HOURS_MINUTES_SECONDS_TO_SECONDS(hour,min,sec) ((float)(hour)*3600+(float)(min)*60+(float)sec)
-#define HOURS_MINUTES_SECONDS_TO_DECIMAL_HOURS(hour,min,sec) ((float)(hour)+(float)(min)*0.0166666667+(float)(sec)*0.0002777778)
+#define HOURS_MINUTES_SECONDS_TO_SECONDS(hour,min,sec) ((FLOAT)(hour)*3600+(FLOAT)(min)*60+(FLOAT)sec)
+#define HOURS_MINUTES_SECONDS_TO_DECIMAL_HOURS(hour,min,sec) ((FLOAT)(hour)+(FLOAT)(min)*0.0166666667+(FLOAT)(sec)*0.0002777778)
 
 // Convert seconds
-#define SECONDS_TO_DECIMAL_DEGREES(value) ((float)(value)*0.0002777778)
-#define SECONDS_TO_DECIMAL_HOURS(value) ((float)(value)*0.0002777778)
+#define SECONDS_TO_DECIMAL_DEGREES(value) ((FLOAT)(value)*0.0002777778)
+#define SECONDS_TO_DECIMAL_HOURS(value) ((FLOAT)(value)*0.0002777778)
 
 #define T_WITH_JD(day,time)((day-2451545+time)*0.0000273785)
 
 // Observer's coordinates on Earth
-static float latitudeOnEarth  = NAN;
-static float longitudeOnEarth = NAN;
-static int   altitudeOnEarth  = NAN;
+static FLOAT latitudeOnEarth      = NAN;
+static FLOAT longitudeOnEarth     = NAN;
+static FLOAT longitudeOnEarthSign = -1;
+static int   altitudeOnEarth      = NAN;
 
-void Ephemeris::floatingHoursToHoursMinutesSeconds(float floatingHours, int *hours, int *minutes, float *seconds)
+void Ephemeris::floatingHoursToHoursMinutesSeconds(FLOAT floatingHours, int *hours, int *minutes, FLOAT *seconds)
 {
     // Calculate hours, minutes, seconds
     if( floatingHours >= 0 )
@@ -89,27 +90,27 @@ void Ephemeris::floatingHoursToHoursMinutesSeconds(float floatingHours, int *hou
     }
 }
 
-float Ephemeris::hoursMinutesSecondsToFloatingHours(int degrees, int minutes, float seconds)
+FLOAT Ephemeris::hoursMinutesSecondsToFloatingHours(int degrees, int minutes, FLOAT seconds)
 {
     return HOURS_MINUTES_SECONDS_TO_DECIMAL_HOURS(degrees, minutes, seconds);
 }
 
-void Ephemeris::floatingDegreesToDegreesMinutesSeconds(float floatintDegrees, int *degree, int *minute, float *second)
+void Ephemeris::floatingDegreesToDegreesMinutesSeconds(FLOAT floatintDegrees, int *degree, int *minute, FLOAT *second)
 {
     // Calculate hour,minute,second
     if( floatintDegrees >= 0 )
     {
         *degree   = (unsigned int)floatintDegrees;
-        *minute = floatintDegrees*60-*degree*60;
-        *second = floatintDegrees*3600-*degree*3600-*minute*60;
+        *minute = floatintDegrees*60-(long)(*degree*60);
+        *second = floatintDegrees*3600-(long)(*degree*3600)-(long)(*minute*60);
     }
     else
     {
         floatintDegrees = floatintDegrees*-1;
         
         *degree   = (unsigned int)floatintDegrees;
-        *minute = floatintDegrees*60-*degree*60;
-        *second = floatintDegrees*3600-*degree*3600-*minute*60;
+        *minute = floatintDegrees*60-(long)(*degree*60);
+        *second = floatintDegrees*3600-(long)(*degree*3600)-(long)(*minute*60);
         
         *degree = *degree*-1;
     }
@@ -117,7 +118,7 @@ void Ephemeris::floatingDegreesToDegreesMinutesSeconds(float floatintDegrees, in
     return;
 }
 
-float Ephemeris::degreesMinutesSecondsToFloatingDegrees(int degrees, int minutes, float seconds)
+FLOAT Ephemeris::degreesMinutesSecondsToFloatingDegrees(int degrees, int minutes, FLOAT seconds)
 {
     return DEGREES_MINUTES_SECONDS_TO_DECIMAL_DEGREES(degrees,minutes,seconds);
 }
@@ -132,25 +133,25 @@ HorizontalCoordinates Ephemeris::equatorialToHorizontalCoordinatesAtDateAndTime(
     {
         JulianDay jd = Calendar::julianDayForDate(day, month, year);
         
-        float T = T_WITH_JD(jd.day,jd.time);
+        FLOAT T = T_WITH_JD(jd.day,jd.time);
         
-        float meanSideralTime = meanGreenwichSiderealTimeAtDateAndTime(day, month, year, hours, minutes, seconds);
+        FLOAT meanSideralTime = meanGreenwichSiderealTimeAtDateAndTime(day, month, year, hours, minutes, seconds);
         
-        float deltaNutation;
-        float epsilon = obliquityAndNutationForT(T, NULL, &deltaNutation);
+        FLOAT deltaNutation;
+        FLOAT epsilon = obliquityAndNutationForT(T, NULL, &deltaNutation);
         
         // Apparent sideral time in floating hours
-        float theta0 = meanSideralTime + (deltaNutation/15*COSD(epsilon))/3600;
+        FLOAT theta0 = meanSideralTime + (deltaNutation/15*COSD(epsilon))/3600;
         
         
         // Geographic longitude in floating hours
-        float L = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth);
+        FLOAT L = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth*longitudeOnEarthSign);
         
         // Geographic latitude in floating degrees
-        float phi = latitudeOnEarth;
+        FLOAT phi = latitudeOnEarth;
         
         // Local angle in floating degrees
-        float H = (theta0-L-eqCoordinates.ra)*15;
+        FLOAT H = (theta0-L-eqCoordinates.ra)*15;
         
         hCoordinates = equatorialToHorizontal(H,eqCoordinates.dec,phi);
     }
@@ -174,22 +175,22 @@ EquatorialCoordinates Ephemeris::horizontalToEquatorialCoordinatesAtDateAndTime(
         
         JulianDay jd = Calendar::julianDayForDate(day, month, year);
         
-        float T = T_WITH_JD(jd.day,jd.time);
+        FLOAT T = T_WITH_JD(jd.day,jd.time);
         
-        float meanSideralTime = meanGreenwichSiderealTimeAtDateAndTime(day, month, year, hours, minutes, seconds);
+        FLOAT meanSideralTime = meanGreenwichSiderealTimeAtDateAndTime(day, month, year, hours, minutes, seconds);
         
-        float deltaNutation;
-        float epsilon = obliquityAndNutationForT(T, NULL, &deltaNutation);
+        FLOAT deltaNutation;
+        FLOAT epsilon = obliquityAndNutationForT(T, NULL, &deltaNutation);
         
         // Apparent sideral time in floating hours
-        float theta0 = meanSideralTime + (deltaNutation/15*COSD(epsilon))/3600;
+        FLOAT theta0 = meanSideralTime + (deltaNutation/15*COSD(epsilon))/3600;
         
         
         // Geographic longitude in floating hours
-        float L = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth);
+        FLOAT L = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth*longitudeOnEarthSign);
         
         // Geographic latitude in floating degrees
-        float phi = latitudeOnEarth;
+        FLOAT phi = latitudeOnEarth;
         
         // Compute local horizontal coordinates (note: RA will contain H)
         eqCoordinates = horizontalToEquatorial(hCoordinates.azi, hCoordinates.alt, phi);
@@ -208,49 +209,49 @@ EquatorialCoordinates Ephemeris::horizontalToEquatorialCoordinatesAtDateAndTime(
     return eqCoordinates;
 }
 
-float Ephemeris::apparentSideralTime(unsigned int day,  unsigned int month,  unsigned int year,
+FLOAT Ephemeris::apparentSideralTime(unsigned int day,  unsigned int month,  unsigned int year,
                                      unsigned int hours, unsigned int minutes, unsigned int seconds)
 {
     JulianDay jd = Calendar::julianDayForDate(day, month, year);
     
-    float T        = T_WITH_JD(jd.day,jd.time);
-    float TSquared = T*T;
-    float TCubed   = TSquared*T;
+    FLOAT T        = T_WITH_JD(jd.day,jd.time);
+    FLOAT TSquared = T*T;
+    FLOAT TCubed   = TSquared*T;
     
-    float theta0 = 100.46061837 + T*36000.770053608 + TSquared*0.000387933  - TCubed/38710000;
+    FLOAT theta0 = 100.46061837 + T*36000.770053608 + TSquared*0.000387933  - TCubed/38710000;
     theta0 = LIMIT_DEGREES_TO_360(theta0);
     theta0 = DEGREES_TO_FLOATING_HOURS(theta0);
     
-    float time = HOURS_MINUTES_SECONDS_TO_DECIMAL_HOURS(hours,minutes,seconds);
+    FLOAT time = HOURS_MINUTES_SECONDS_TO_DECIMAL_HOURS(hours,minutes,seconds);
     
-    float apparentSideralTime = theta0 + 1.00273790935 * time;
+    FLOAT apparentSideralTime = theta0 + 1.00273790935 * time;
     apparentSideralTime = LIMIT_HOURS_TO_24(apparentSideralTime);
     
     return apparentSideralTime;
 }
 
-float Ephemeris::obliquityAndNutationForT(float T, float *deltaObliquity, float *deltaNutation)
+FLOAT Ephemeris::obliquityAndNutationForT(FLOAT T, FLOAT *deltaObliquity, FLOAT *deltaNutation)
 {
-    float TSquared = T*T;
-    float TCubed   = TSquared*T;
+    FLOAT TSquared = T*T;
+    FLOAT TCubed   = TSquared*T;
     
-    float Ls = 280.4565 + T*36000.7698   + TSquared*0.000303;
+    FLOAT Ls = 280.4565 + T*36000.7698   + TSquared*0.000303;
     Ls = LIMIT_DEGREES_TO_360(Ls);
     
-    float Lm = 218.3164 + T*481267.8812  - TSquared*0.001599;
+    FLOAT Lm = 218.3164 + T*481267.8812  - TSquared*0.001599;
     Lm = LIMIT_DEGREES_TO_360(Lm);
     
-    float Ms = 357.5291 + T*35999.0503   - TSquared*0.000154;
+    FLOAT Ms = 357.5291 + T*35999.0503   - TSquared*0.000154;
     Ms = LIMIT_DEGREES_TO_360(Ms);
     
-    float Mm = 134.9634 + T*477198.8675  + TSquared*0.008721;
+    FLOAT Mm = 134.9634 + T*477198.8675  + TSquared*0.008721;
     Mm = LIMIT_DEGREES_TO_360(Mm);
     
-    float omega = 125.0443 - T*1934.1363 + TSquared*0.008721;
+    FLOAT omega = 125.0443 - T*1934.1363 + TSquared*0.008721;
     omega = LIMIT_DEGREES_TO_360(omega);
     
     // Delta Phi
-    float dNutation =
+    FLOAT dNutation =
     -(17.1996 + 0.01742*T) * SIND(omega)
     -(1.3187  + 0.00016*T) * SIND(2*Ls)
     - 0.2274               * SIND(2*Lm)
@@ -271,7 +272,7 @@ float Ephemeris::obliquityAndNutationForT(float T, float *deltaObliquity, float 
     }
     
     // Delta Eps
-    float dObliquity =
+    FLOAT dObliquity =
     +(9.2025  + 0.00089*T) * COSD(omega)
     +(0.5736  - 0.00031*T) * COSD(2*Ls)
     + 0.0977               * COSD(2*Lm)
@@ -287,37 +288,37 @@ float Ephemeris::obliquityAndNutationForT(float T, float *deltaObliquity, float 
         *deltaObliquity = dObliquity;
     }
     
-    float eps0 = DEGREES_MINUTES_SECONDES_TO_SECONDS(23,26,21.448)-T*46.8150-TSquared*0.00059+TCubed*0.001813;
+    FLOAT eps0 = DEGREES_MINUTES_SECONDES_TO_SECONDS(23,26,21.448)-T*46.8150-TSquared*0.00059+TCubed*0.001813;
     
-    float obliquity = eps0 + dObliquity;
+    FLOAT obliquity = eps0 + dObliquity;
     obliquity = SECONDS_TO_DECIMAL_DEGREES(obliquity);
     
     return obliquity;
 }
 
-float Ephemeris::sumELP2000Coefs(const float *moonMultCoefficients, const ELP2000Coefficient *moonAngleCoefficients, int coefCount,
-                                 float E, float D, float M, float Mp, float F, bool squareMultiplicator)
+FLOAT Ephemeris::sumELP2000Coefs(const FLOAT *moonMultCoefficients, const ELP2000Coefficient *moonAngleCoefficients, int coefCount,
+                                 FLOAT E, FLOAT D, FLOAT M, FLOAT Mp, FLOAT F, bool squareMultiplicator)
 {
     // Parse each value in coef table
-    float value = 0;
+    FLOAT value = 0;
     for(int numCoef=0; numCoef<coefCount; numCoef++)
     {
         // Get coef
-        float multiplicator;
+        FLOAT multiplicator;
         ELP2000Coefficient moonAngle;;
         
 #if ARDUINO
         // We limit SRAM usage by using flash memory (PROGMEM)
-        memcpy_P(&multiplicator, &moonMultCoefficients[numCoef],  sizeof(float));
+        memcpy_P(&multiplicator, &moonMultCoefficients[numCoef],  sizeof(FLOAT));
         memcpy_P(&moonAngle,     &moonAngleCoefficients[numCoef], sizeof(ELP2000Coefficient));
 #else
         multiplicator = moonMultCoefficients[numCoef];
         moonAngle     = moonAngleCoefficients[numCoef];
 #endif
         
-        float angle =  moonAngle.D*D + moonAngle.M*M + moonAngle.Mp*Mp + moonAngle.F*F;
+        FLOAT angle =  moonAngle.D*D + moonAngle.M*M + moonAngle.Mp*Mp + moonAngle.F*F;
         
-        float res;
+        FLOAT res;
         if( moonMultCoefficients != RMoonCoefficients )
         {
             res  = multiplicator * SIND(angle);
@@ -359,62 +360,62 @@ float Ephemeris::sumELP2000Coefs(const float *moonMultCoefficients, const ELP200
     return value;
 }
 
-EquatorialCoordinates  Ephemeris::equatorialCoordinatesForEarthsMoonAtJD(JulianDay jd, float *distance)
+EquatorialCoordinates  Ephemeris::equatorialCoordinatesForEarthsMoonAtJD(JulianDay jd, FLOAT *distance)
 {
-    float T        = T_WITH_JD(jd.day,jd.time);
-    float TSquared = T*T;
-    float TCubed   = TSquared*T;
-    float T4       = TCubed*T;
+    FLOAT T        = T_WITH_JD(jd.day,jd.time);
+    FLOAT TSquared = T*T;
+    FLOAT TCubed   = TSquared*T;
+    FLOAT T4       = TCubed*T;
     
     // Mean Longitude of the Moon
-    float Lp = 218.31644735 + 481267.88122838*T - 0.001579944*TSquared + TCubed/538841 - T4/538841;
+    FLOAT Lp = 218.31644735 + 481267.88122838*T - 0.001579944*TSquared + TCubed/538841 - T4/538841;
     Lp = LIMIT_DEGREES_TO_360(Lp);
     
     // Mean anomaly of the Sun
-    float M = 357.5291092 + T*35999.0502909  - TSquared*0.0001536;
+    FLOAT M = 357.5291092 + T*35999.0502909  - TSquared*0.0001536;
     M = LIMIT_DEGREES_TO_360(M);
     
     // Mean anomaly of Moon
-    float Mp = 134.96339622 + 477198.86750067*T + 0.00872053*TSquared + TCubed/69699;
+    FLOAT Mp = 134.96339622 + 477198.86750067*T + 0.00872053*TSquared + TCubed/69699;
     Mp = LIMIT_DEGREES_TO_360(Mp);
     
     // Mean elongation of Moon
-    float D = 297.85019172 + 445267.11139756*T - 0.00190272*TSquared + TCubed/545868;
+    FLOAT D = 297.85019172 + 445267.11139756*T - 0.00190272*TSquared + TCubed/545868;
     D = LIMIT_DEGREES_TO_360(D);
     
     // Mean distance at ascending node
-    float F = 93.27209769 + 483202.01756053*T - 0.00367481*TSquared - TCubed/3525955;
+    FLOAT F = 93.27209769 + 483202.01756053*T - 0.00367481*TSquared - TCubed/3525955;
     F = LIMIT_DEGREES_TO_360(F);
     
     // A1, A2, A3
-    float A1 = 119.75 + 131.849*T;
+    FLOAT A1 = 119.75 + 131.849*T;
     A1 = LIMIT_DEGREES_TO_360(A1);
-    float A2 =  53.09 + 479264.290*T;
+    FLOAT A2 =  53.09 + 479264.290*T;
     A2 = LIMIT_DEGREES_TO_360(A2);
-    float A3 = 313.45 + 481266.484*T;
+    FLOAT A3 = 313.45 + 481266.484*T;
     A3 = LIMIT_DEGREES_TO_360(A3);
     
     
-    float E = 1 - 0.002516*T - 0.0000074*TCubed;
+    FLOAT E = 1 - 0.002516*T - 0.0000074*TCubed;
     E = LIMIT_DEGREES_TO_360(E);
     
     
-    float sumL = sumELP2000Coefs( LMoonCoefficients, LMoonAngleCoefficients, sizeof(LMoonCoefficients)/sizeof(float), E, D, M, Mp, F, false);
+    FLOAT sumL = sumELP2000Coefs( LMoonCoefficients, LMoonAngleCoefficients, sizeof(LMoonCoefficients)/sizeof(FLOAT), E, D, M, Mp, F, false);
     sumL += 3958*SIND(A1) + 1962*SIND(Lp-F) + 318*SIND(A2);
     
-    float sumB = sumELP2000Coefs(BMoonCoefficients, BMoonAngleCoefficients, sizeof(BMoonCoefficients)/sizeof(float), E, D, M, Mp, F, false);
+    FLOAT sumB = sumELP2000Coefs(BMoonCoefficients, BMoonAngleCoefficients, sizeof(BMoonCoefficients)/sizeof(FLOAT), E, D, M, Mp, F, false);
     sumB += -2235*SIND(Lp) + 382*SIND(A3) + 175*SIND(A1-F) + 175*SIND(A1+F) + 127*SIND(Lp-Mp) - 115*sin(Lp+Mp);
     
-    float sumR = sumELP2000Coefs(RMoonCoefficients, RMoonAngleCoefficients, sizeof(RMoonCoefficients)/sizeof(float), E, D, M, Mp, F, true);
+    FLOAT sumR = sumELP2000Coefs(RMoonCoefficients, RMoonAngleCoefficients, sizeof(RMoonCoefficients)/sizeof(FLOAT), E, D, M, Mp, F, true);
     
     // Geocentic longitude
-    float lambda = Lp + sumL/1000000;   // Degrees
+    FLOAT lambda = Lp + sumL/1000000;   // Degrees
     
     // Geocentric latitude
-    float beta   = sumB/1000000;        // Degrees
+    FLOAT beta   = sumB/1000000;        // Degrees
     
     // Distance
-    float delta  = 385000.56+sumR/1000; // Kilometers
+    FLOAT delta  = 385000.56+sumR/1000; // Kilometers
     
     if( distance )
     {
@@ -423,8 +424,8 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForEarthsMoonAtJD(JulianD
     }
     
     // Obliquity and Nutation
-    float deltaNutation;
-    float epsilon = Ephemeris::obliquityAndNutationForT(T, NULL, &deltaNutation);
+    FLOAT deltaNutation;
+    FLOAT epsilon = Ephemeris::obliquityAndNutationForT(T, NULL, &deltaNutation);
     
     // Intergrate nutation
     lambda += deltaNutation/3600;
@@ -432,38 +433,38 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForEarthsMoonAtJD(JulianD
     return EclipticToEquatorial(lambda, beta, epsilon);
 }
 
-EquatorialCoordinates  Ephemeris::equatorialCoordinatesForSunAtJD(JulianDay jd, float *distance)
+EquatorialCoordinates  Ephemeris::equatorialCoordinatesForSunAtJD(JulianDay jd, FLOAT *distance)
 {
     EquatorialCoordinates sunCoordinates;
     
-    float T        = T_WITH_JD(jd.day,jd.time);
-    float TSquared = T*T;
+    FLOAT T        = T_WITH_JD(jd.day,jd.time);
+    FLOAT TSquared = T*T;
     
-    float L0 = 280.46646 + T*36000.76983 + TSquared*0.0003032;
+    FLOAT L0 = 280.46646 + T*36000.76983 + TSquared*0.0003032;
     L0 = LIMIT_DEGREES_TO_360(L0);
     
-    float M = 357.5291092 + T*35999.0502909  - TSquared*0.0001536;
+    FLOAT M = 357.5291092 + T*35999.0502909  - TSquared*0.0001536;
     M = LIMIT_DEGREES_TO_360(M);
     
-    float e = 0.016708634 - T*0.000042037 - TSquared*0.0000001267;
+    FLOAT e = 0.016708634 - T*0.000042037 - TSquared*0.0000001267;
     
-    float C =
+    FLOAT C =
     +(1.914602 - T*0.004817 - TSquared*0.000014) * SIND(M)
     +(0.019993 - T*0.000101                    ) * SIND(2*M)
     + 0.000289                                   * SIND(3*M);
     
-    float O = L0 + C;
+    FLOAT O = L0 + C;
     
-    float v = M  + C;
+    FLOAT v = M  + C;
     
     // Improved precision for O according to page 65
     {
-        float Av = 351.52 + 22518.4428*T;  // Mars
-        float Bv = 253.14 + 45036.8857*T;  // Venus
-        float Cj = 157.23 + 32964.4673*T;  // Jupiter
-        float Dm = 297.85 + 445267.1117*T; // Moon
-        float E  = 252.08 + 20.19 *T;
-        float H  = 42.43  + 65928.9358*T;
+        FLOAT Av = 351.52 + 22518.4428*T;  // Mars
+        FLOAT Bv = 253.14 + 45036.8857*T;  // Venus
+        FLOAT Cj = 157.23 + 32964.4673*T;  // Jupiter
+        FLOAT Dm = 297.85 + 445267.1117*T; // Moon
+        FLOAT E  = 252.08 + 20.19 *T;
+        FLOAT H  = 42.43  + 65928.9358*T;
         
         O +=
         + 0.00134 * COSD(Av)
@@ -486,16 +487,17 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForSunAtJD(JulianDay jd, 
         *distance = (1.000001018*(1-e*e))/(1+e*COSD(v));
     }
     
-    float omega = 125.04 - 1934.136*T;
+    FLOAT omega = 125.04 - 1934.136*T;
     
-    float lambda = O - 0.00569 - 0.00478 * SIND(omega);
+    FLOAT lambda = O - 0.00569 - 0.00478 * SIND(omega);
     
-    float eps = obliquityAndNutationForT(T, NULL, NULL);
+    FLOAT eps = obliquityAndNutationForT(T, NULL, NULL);
     
     eps += 0.00256*COSD(omega);
     
     // Alpha   (Hour=Deg/15.0)
-    sunCoordinates.ra = atan(COSD(eps)*TAND(lambda))*12/PI;
+    sunCoordinates.ra = atan2(SIND(lambda)*COSD(eps),COSD(lambda));
+    sunCoordinates.ra = RADIANS_TO_HOURS(sunCoordinates.ra);
     sunCoordinates.ra = LIMIT_HOURS_TO_24(sunCoordinates.ra);
     
     // Delta
@@ -504,12 +506,12 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForSunAtJD(JulianDay jd, 
     return sunCoordinates;
 }
 
-PlanetayOrbit Ephemeris::planetayOrbitForPlanetAndT(SolarSystemObjectIndex solarSystemObjectIndex, float T)
+PlanetayOrbit Ephemeris::planetayOrbitForPlanetAndT(SolarSystemObjectIndex solarSystemObjectIndex, FLOAT T)
 {
     PlanetayOrbit planetayOrbit;
     
-    float TSquared = T*T;
-    float TCubed   = TSquared*T;
+    FLOAT TSquared = T*T;
+    FLOAT TCubed   = TSquared*T;
     
     switch (solarSystemObjectIndex)
     {
@@ -606,13 +608,13 @@ PlanetayOrbit Ephemeris::planetayOrbitForPlanetAndT(SolarSystemObjectIndex solar
     return planetayOrbit;
 }
 
-float Ephemeris::kepler(float M, float e)
+FLOAT Ephemeris::kepler(FLOAT M, FLOAT e)
 {
     M = DEGREES_TO_RADIANS(M);
     
-    float E = M;
+    FLOAT E = M;
     
-    float previousE = E+1;
+    FLOAT previousE = E+1;
     
     for(int i=0; i<10; i++ )
     {
@@ -634,10 +636,10 @@ float Ephemeris::kepler(float M, float e)
     return RADIANS_TO_DEGREES(E);
 }
 
-float Ephemeris::sumVSOP87Coefs(const VSOP87Coefficient *valuePlanetCoefficients, int coefCount, float T)
+FLOAT Ephemeris::sumVSOP87Coefs(const VSOP87Coefficient *valuePlanetCoefficients, int coefCount, FLOAT T)
 {
     // Parse each value in coef table
-    float value = 0;
+    FLOAT value = 0;
     for(int numCoef=0; numCoef<coefCount; numCoef++)
     {
         // Get coef
@@ -650,7 +652,7 @@ float Ephemeris::sumVSOP87Coefs(const VSOP87Coefficient *valuePlanetCoefficients
         coef = valuePlanetCoefficients[numCoef];
 #endif
         
-        float res = cos(coef.B + coef.C*T);
+        FLOAT res = cos(coef.B + coef.C*T);
         
         // To avoid out of range issue with single precision
         // we've stored sqrt(A) and not A. As a result we need to square it back.
@@ -663,7 +665,7 @@ float Ephemeris::sumVSOP87Coefs(const VSOP87Coefficient *valuePlanetCoefficients
     return value;
 }
 
-HorizontalCoordinates Ephemeris::equatorialToHorizontal(float H, float delta, float phi)
+HorizontalCoordinates Ephemeris::equatorialToHorizontal(FLOAT H, FLOAT delta, FLOAT phi)
 {
     HorizontalCoordinates coordinates;
     
@@ -677,7 +679,7 @@ HorizontalCoordinates Ephemeris::equatorialToHorizontal(float H, float delta, fl
     return coordinates;
 }
 
-EquatorialCoordinates Ephemeris::horizontalToEquatorial(float azimuth, float altitude, float latitude)
+EquatorialCoordinates Ephemeris::horizontalToEquatorial(FLOAT azimuth, FLOAT altitude, FLOAT latitude)
 {
     EquatorialCoordinates coordinates;
     
@@ -696,7 +698,7 @@ EquatorialCoordinates Ephemeris::horizontalToEquatorial(float azimuth, float alt
     return coordinates;
 }
 
-EquatorialCoordinates Ephemeris::EclipticToEquatorial(float lambda, float beta, float epsilon)
+EquatorialCoordinates Ephemeris::EclipticToEquatorial(FLOAT lambda, FLOAT beta, FLOAT epsilon)
 {
     lambda  = DEGREES_TO_RADIANS(lambda);
     beta    = DEGREES_TO_RADIANS(beta);
@@ -724,23 +726,23 @@ RectangularCoordinates Ephemeris::HeliocentricToRectangular(HeliocentricCoordina
     return coordinates;
 }
 
-float Ephemeris::meanGreenwichSiderealTimeAtDateAndTime(unsigned int day,   unsigned int month,   unsigned int year,
+FLOAT Ephemeris::meanGreenwichSiderealTimeAtDateAndTime(unsigned int day,   unsigned int month,   unsigned int year,
                                                         unsigned int hours, unsigned int minutes, unsigned int seconds)
 {
-    float meanGreenwichSiderealTime;
+    FLOAT meanGreenwichSiderealTime;
     
     JulianDay jd0 = Calendar::julianDayForDateAndTime(day, month, year, 0, 0, 0);
-    float T0        = T_WITH_JD(jd0.day,jd0.time);
-    float T0Squared = T0*T0;
-    float T0Cubed   = T0Squared*T0;
+    FLOAT T0        = T_WITH_JD(jd0.day,jd0.time);
+    FLOAT T0Squared = T0*T0;
+    FLOAT T0Cubed   = T0Squared*T0;
     
     // Sideral time at midnight
-    float theta0 = 100.46061837 + (36000.770053608*T0) + (0.000387933*T0Squared) - (T0Cubed/38710000);
+    FLOAT theta0 = 100.46061837 + (36000.770053608*T0) + (0.000387933*T0Squared) - (T0Cubed/38710000);
     theta0 = LIMIT_DEGREES_TO_360(theta0);
     theta0 = DEGREES_TO_FLOATING_HOURS(theta0);
     
     // Sideral time of day
-    float thetaH = 1.00273790935*HOURS_MINUTES_SECONDS_TO_SECONDS(hours,minutes,seconds);
+    FLOAT thetaH = 1.00273790935*HOURS_MINUTES_SECONDS_TO_SECONDS(hours,minutes,seconds);
     thetaH = SECONDS_TO_DECIMAL_HOURS(thetaH);
     
     // Add time at midnight and time of day
@@ -757,7 +759,7 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
     
     JulianDay jd = Calendar::julianDayForDateAndTime(day, month, year, hours, minutes, seconds);
     
-    float T = T_WITH_JD(jd.day,jd.time);
+    FLOAT T = T_WITH_JD(jd.day,jd.time);
     
     // Equatorial coordinates
     if( solarSystemObjectIndex == Sun )
@@ -774,7 +776,7 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
     }
     
     // Apparent diameter at a distance of 1 astronomical unit.
-    float diameter = 0;
+    FLOAT diameter = 0;
     switch (solarSystemObjectIndex)
     {
         case Mercury:
@@ -826,33 +828,33 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
     // Approximate apparent diameter in arc minutes according to distance
     solarSystemObject.diameter = diameter / solarSystemObject.distance/60;
     
-    float meanSideralTime = meanGreenwichSiderealTimeAtDateAndTime(day, month, year, hours, minutes, seconds);
+    FLOAT meanSideralTime = meanGreenwichSiderealTimeAtDateAndTime(day, month, year, hours, minutes, seconds);
     
-    float deltaNutation;
-    float epsilon = obliquityAndNutationForT(T, NULL, &deltaNutation);
+    FLOAT deltaNutation;
+    FLOAT epsilon = obliquityAndNutationForT(T, NULL, &deltaNutation);
     
     // Apparent sideral time in floating hours
-    float theta0 = meanSideralTime + (deltaNutation/15*COSD(epsilon))/3600;
+    FLOAT theta0 = meanSideralTime + (deltaNutation/15*COSD(epsilon))/3600;
     
     if( !isnan(longitudeOnEarth) && !isnan(latitudeOnEarth) )
     {
         // Geographic longitude in floating hours
-        float L = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth);
+        FLOAT L = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth*longitudeOnEarthSign);
         
         // Geographic latitude in floating degrees
-        float phi = latitudeOnEarth;
+        FLOAT phi = latitudeOnEarth;
         
         // Local angle in floating degrees
-        float H = (theta0-L-solarSystemObject.equaCoordinates.ra)*15;
+        FLOAT H = (theta0-L-solarSystemObject.equaCoordinates.ra)*15;
         
         solarSystemObject.horiCoordinates = equatorialToHorizontal(H,solarSystemObject.equaCoordinates.dec,phi);
         
         // Mean sideral time at midnight
-        float T0 = Ephemeris::meanGreenwichSiderealTimeAtDateAndTime(day, month, year, 0, 0, 0);
+        FLOAT T0 = Ephemeris::meanGreenwichSiderealTimeAtDateAndTime(day, month, year, 0, 0, 0);
         
         // Compute rise and set
         EquatorialCoordinates tmpCoord,tmpCoord0,tmpCoord24;
-        float linearSpeedRA,linearSpeedDec;
+        FLOAT linearSpeedRA,linearSpeedDec;
         switch (solarSystemObjectIndex)
         {
             case Sun:
@@ -975,28 +977,28 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
     return solarSystemObject;
 }
 
-void Ephemeris::setLocationOnEarth(float floatingLatitude, float floatingLongitude)
+void Ephemeris::setLocationOnEarth(FLOAT floatingLatitude, FLOAT floatingLongitude)
 {
     latitudeOnEarth  = floatingLatitude;
     longitudeOnEarth = floatingLongitude;
 }
 
-void Ephemeris::setLocationOnEarth(float latDegrees, float latMinutes, float latSeconds,
-                                   float lonDegrees, float lonMinutes, float lonSeconds)
+void Ephemeris::setLocationOnEarth(FLOAT latDegrees, FLOAT latMinutes, FLOAT latSeconds,
+                                   FLOAT lonDegrees, FLOAT lonMinutes, FLOAT lonSeconds)
 {
     latitudeOnEarth  = DEGREES_MINUTES_SECONDS_TO_DECIMAL_DEGREES(latDegrees,latMinutes,latSeconds);
     longitudeOnEarth = DEGREES_MINUTES_SECONDS_TO_DECIMAL_DEGREES(lonDegrees,lonMinutes,lonSeconds);
 }
 
-EquatorialCoordinates  Ephemeris::equatorialCoordinatesForPlanetAtJD(SolarSystemObjectIndex solarSystemObjectIndex, JulianDay jd, float *distance)
+EquatorialCoordinates  Ephemeris::equatorialCoordinatesForPlanetAtJD(SolarSystemObjectIndex solarSystemObjectIndex, JulianDay jd, FLOAT *distance)
 {
     EquatorialCoordinates coordinates;
     coordinates.ra  = 0;
     coordinates.dec = 0;
     
-    float T      = T_WITH_JD(jd.day,jd.time);
-    float lastT  = 0;
-    float TLight = 0;
+    FLOAT T      = T_WITH_JD(jd.day,jd.time);
+    FLOAT lastT  = 0;
+    FLOAT TLight = 0;
     HeliocentricCoordinates hcPlanet;
     HeliocentricCoordinates hcEarth;
     RectangularCoordinates  rectPlanet;
@@ -1005,14 +1007,14 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForPlanetAtJD(SolarSystem
     jd2.day  = jd.day;
     jd2.time = jd.time;
     
-    float x2,y2,z2;
+    FLOAT x2,y2,z2;
     
     // Iterate for good precision according to light speed delay
     while (T != lastT)
     {
         lastT = T;
         
-        float jd2 = (jd.day+jd.time) - TLight;
+        FLOAT jd2 = (jd.day+jd.time) - TLight;
         T = T_WITH_JD(jd2,0);
         
         hcPlanet   = Ephemeris::heliocentricCoordinatesForPlanetAndT(solarSystemObjectIndex, T);
@@ -1031,7 +1033,7 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForPlanetAtJD(SolarSystem
         z2 = rectPlanet.z*rectPlanet.z;
         
         // Real distance from Earth
-        float delta = sqrtf(x2+y2+z2);
+        FLOAT delta = sqrtf(x2+y2+z2);
         
         if( distance )
         {
@@ -1044,12 +1046,12 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForPlanetAtJD(SolarSystem
     
     
     // Geocentic longitude
-    float lambda = atan2(rectPlanet.y,rectPlanet.x);
+    FLOAT lambda = atan2(rectPlanet.y,rectPlanet.x);
     lambda = RADIANS_TO_DEGREES(lambda);
     lambda = LIMIT_DEGREES_TO_360(lambda);
     
     // Geocentric latitude
-    float beta   = rectPlanet.z/sqrtf(x2+y2);
+    FLOAT beta   = rectPlanet.z/sqrtf(x2+y2);
     beta = RADIANS_TO_DEGREES(beta);
     
     
@@ -1057,33 +1059,33 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForPlanetAtJD(SolarSystem
     {
         PlanetayOrbit earthOrbit = Ephemeris::planetayOrbitForPlanetAndT(Earth, T);
         
-        float TSquared = T*T;
+        FLOAT TSquared = T*T;
         
-        float L0 = 280.46646 + T*36000.76983 + TSquared*0.0003032;
+        FLOAT L0 = 280.46646 + T*36000.76983 + TSquared*0.0003032;
         L0 = LIMIT_DEGREES_TO_360(L0);
         
-        float M = 357.52911 + T*35999.05029  - TSquared*0.0001537;
+        FLOAT M = 357.52911 + T*35999.05029  - TSquared*0.0001537;
         M = LIMIT_DEGREES_TO_360(M);
         
-        float C =
+        FLOAT C =
         +(1.914602 - T*0.004817 - TSquared*0.000014) * SIND(M)
         +(0.019993 - T*0.000101                    ) * SIND(2*M)
         + 0.000289                                   * SIND(3*M);
         
         // Sun longitude
-        float O = L0 + C;
+        FLOAT O = L0 + C;
         
         // Abberation
-        float k = 20.49552;
-        float xAberration = (-k*COSD(O - lambda) + earthOrbit.e*k*COSD(earthOrbit.pi - lambda)) / COSD(beta)/3600;
-        float yAberration = -k*SIND(beta)*(SIND(O - lambda) - earthOrbit.e*SIND(earthOrbit.pi - lambda))/3600;
+        FLOAT k = 20.49552;
+        FLOAT xAberration = (-k*COSD(O - lambda) + earthOrbit.e*k*COSD(earthOrbit.pi - lambda)) / COSD(beta)/3600;
+        FLOAT yAberration = -k*SIND(beta)*(SIND(O - lambda) - earthOrbit.e*SIND(earthOrbit.pi - lambda))/3600;
         lambda -= xAberration;
         beta   -= yAberration;
     }
     
     // Obliquity and Nutation
-    float deltaNutation;
-    float epsilon = Ephemeris::obliquityAndNutationForT(T, NULL, &deltaNutation);
+    FLOAT deltaNutation;
+    FLOAT epsilon = Ephemeris::obliquityAndNutationForT(T, NULL, &deltaNutation);
     
     // Intergrate nutation
     lambda += deltaNutation/3600;
@@ -1091,21 +1093,21 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForPlanetAtJD(SolarSystem
     return EclipticToEquatorial(lambda, beta, epsilon);
 }
 
-HeliocentricCoordinates  Ephemeris::heliocentricCoordinatesForPlanetAndT(SolarSystemObjectIndex solarSystemObjectIndex, float T)
+HeliocentricCoordinates  Ephemeris::heliocentricCoordinatesForPlanetAndT(SolarSystemObjectIndex solarSystemObjectIndex, FLOAT T)
 {
     HeliocentricCoordinates coordinates;
     
     T = T/10;
-    float TSquared = T*T;
-    float TCubed   = TSquared*T;
-    float T4       = TCubed*T;
-    float T5       = T4*T;
+    FLOAT TSquared = T*T;
+    FLOAT TCubed   = TSquared*T;
+    FLOAT T4       = TCubed*T;
+    FLOAT T5       = T4*T;
     
     int SizeOfVSOP87Coefficient = sizeof(VSOP87Coefficient);
     
-    float l0=0,l1=0,l2=0,l3=0,l4=0,l5=0;
-    float b0=0,b1=0,b2=0,b3=0,b4=0,b5=0;
-    float r0=0,r1=0,r2=0,r3=0,r4=0,r5=0;
+    FLOAT l0=0,l1=0,l2=0,l3=0,l4=0,l5=0;
+    FLOAT b0=0,b1=0,b2=0,b3=0,b4=0,b5=0;
+    FLOAT r0=0,r1=0,r2=0,r3=0,r4=0,r5=0;
     
     switch (solarSystemObjectIndex)
     {
@@ -1341,49 +1343,43 @@ HeliocentricCoordinates  Ephemeris::heliocentricCoordinatesForPlanetAndT(SolarSy
     return coordinates;
 }
 
-RiseAndSetState  Ephemeris::riseAndSetForEquatorialCoordinatesAndT0(EquatorialCoordinates coord, float T0, float *rise, float *set,
-                                                                    float paralax, float apparentDiameter)
+RiseAndSetState  Ephemeris::riseAndSetForEquatorialCoordinatesAndT0(EquatorialCoordinates coord, FLOAT T0, FLOAT *rise, FLOAT *set,
+                                                                    FLOAT paralax, FLOAT apparentDiameter)
 {
+    if( rise ) *rise = NAN;
+    if( set )  *set  = NAN;
+    
     if( isnan(longitudeOnEarth) && isnan(latitudeOnEarth) )
     {
-        *rise = NAN;
-        *set  = NAN;
-        
         return LocationOnEarthUnitialized;
     }
     
-    float lon = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth);
-    float lat = latitudeOnEarth;
+    FLOAT lon = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth*longitudeOnEarthSign);
+    FLOAT lat = latitudeOnEarth;
     
     // Altitude angle
-    float n1 = ACOSD(6378140/(float)(6378140 + altitudeOnEarth));
+    FLOAT n1 = ACOSD(6378140/(FLOAT)(6378140 + altitudeOnEarth));
     
     // h0 = P - R - 1/2 d - η1
     // P: Parallax in degrees (57' for the moon and 0 for others).
     // R: Refraction of Radau in degrees
     // d: Apparent diameter in degrees (32' for moon en sun).
     // n1 Altitude parameter
-    float h0 = paralax - 34/60.0 -apparentDiameter/2 - n1;
+    FLOAT h0 = paralax - 34/60.0 -apparentDiameter/2 - n1;
     
     // cos H = (sin(h0) - sin(φ) sin(δ))/(cos(φ) cos (δ))
-    float cosH = (SIND(h0) - SIND(lat)*SIND(coord.dec))/(COSD(lat)*COSD(coord.dec));
+    FLOAT cosH = (SIND(h0) - SIND(lat)*SIND(coord.dec))/(COSD(lat)*COSD(coord.dec));
     
     if( cosH < -1 )
     {
-        if( rise ) *rise = NAN;
-        if( set )  *set  = NAN;
-        
         return ObjectAlwaysInSky;
     }
     else if( cosH > 1 )
     {
-        if( rise ) *rise = NAN;
-        if( set )  *set  = NAN;
-        
         return ObjectNeverInSky;
     }
     
-    float H = ACOSD(cosH);
+    FLOAT H = ACOSD(cosH);
     H = DEGREES_TO_FLOATING_HOURS(H);
     
     if( rise )
@@ -1400,12 +1396,12 @@ RiseAndSetState  Ephemeris::riseAndSetForEquatorialCoordinatesAndT0(EquatorialCo
 }
 
 RiseAndSetState Ephemeris::riseAndSetForEquatorialCoordinatesAtDateAndTime(EquatorialCoordinates coord,
-                                                                           float *rise, float *set,
+                                                                           FLOAT *rise, FLOAT *set,
                                                                            unsigned int day,  unsigned int month,  unsigned int year,
                                                                            unsigned int hours, unsigned int minutes, unsigned int seconds)
 {
     // Mean sideral time at midnight
-    float T0 = Ephemeris::meanGreenwichSiderealTimeAtDateAndTime(day, month, year, 0, 0, 0);
+    FLOAT T0 = Ephemeris::meanGreenwichSiderealTimeAtDateAndTime(day, month, year, 0, 0, 0);
     
     return riseAndSetForEquatorialCoordinatesAndT0(coord, T0, rise, set, 0, 0);
 }
@@ -1413,4 +1409,16 @@ RiseAndSetState Ephemeris::riseAndSetForEquatorialCoordinatesAtDateAndTime(Equat
 void Ephemeris::setAltitude(int altitude)
 {
     altitudeOnEarth = altitude;
+}
+
+void Ephemeris::flipLongitude(bool flip)
+{
+    if( flip == true )
+    {
+        longitudeOnEarthSign = 1;
+    }
+    else
+    {
+        longitudeOnEarthSign = -1;
+    }
 }

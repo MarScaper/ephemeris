@@ -209,6 +209,9 @@ void setup()
   Ephemeris::setLocationOnEarth(48,50,11,  // Lat: 48°50'11"
                                 -2,20,14); // Lon: -2°20'14"
 
+  // East is negative and West is positive
+  Ephemeris::flipLongitude(true);
+    
   // Set altitude to improve rise and set precision
   Ephemeris::setAltitude(75);
                                 

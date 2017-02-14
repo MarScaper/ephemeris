@@ -36,7 +36,7 @@ struct ELP2000Coefficient
     char F;
 };
 
-CONST float LMoonCoefficients[] =
+CONST FLOAT LMoonCoefficients[] =
 {
     6288774,
     1274027,
@@ -166,7 +166,7 @@ CONST ELP2000Coefficient LMoonAngleCoefficients[] =
 };
 
 
-CONST float BMoonCoefficients[] =
+CONST FLOAT BMoonCoefficients[] =
 {
     5128122,
      280602,
@@ -296,7 +296,7 @@ CONST ELP2000Coefficient BMoonAngleCoefficients[] =
 };
 
 
-CONST float RMoonCoefficients[] =
+CONST FLOAT RMoonCoefficients[] =
 {
     -4572.237417,
     -1923.307308,

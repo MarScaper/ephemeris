@@ -21,6 +21,12 @@
 #ifndef Calendar_h
 #define Calendar_h
 
+#ifndef FLOAT
+// Change FLOAT according to wanted precision (float or double).
+#define FLOAT float
+#endif
+
+
 /*! This structure describes a Julian day with integer and floating value parts.
  *  As a result we can get 64bits precision with single precision processor. */
 struct JulianDay
@@ -29,7 +35,7 @@ struct JulianDay
     long day;
     
     /*! Floating value of Jullian day (0.0=0h 1.0=24h) */
-    float time;
+    FLOAT time;
 };
 
 
@@ -40,12 +46,12 @@ class Calendar
 {
 public:
     
-    static JulianDay julianDayForDate(float day, unsigned int month, unsigned int year);
+    static JulianDay julianDayForDate(FLOAT day, unsigned int month, unsigned int year);
     
     static JulianDay julianDayForDateAndTime(unsigned int day,   unsigned int month,   unsigned int year,
                                              unsigned int hours, unsigned int minutes, unsigned int seconds);
     
-    static void dateForJulianDay(JulianDay julianDay, float *day, unsigned int *month, unsigned int *year);
+    static void dateForJulianDay(JulianDay julianDay, FLOAT *day, unsigned int *month, unsigned int *year);
     
     static void dateAndTimeForJulianDay(JulianDay julianDay,
                                         unsigned int *day,   unsigned int *month,   unsigned int *year,

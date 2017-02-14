@@ -29,9 +29,9 @@
 
 struct VSOP87Coefficient
 {
-    float A;
-    float B;
-    float C;
+    FLOAT A;
+    FLOAT B;
+    FLOAT C;
 };
 
 
