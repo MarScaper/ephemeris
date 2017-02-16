@@ -1384,12 +1384,12 @@ RiseAndSetState  Ephemeris::riseAndSetForEquatorialCoordinatesAndT0(EquatorialCo
     
     if( rise )
     {
-        *rise = LIMIT_HOURS_TO_24(coord.ra - H + lon - T0)/1.0027379094;
+        *rise = LIMIT_HOURS_TO_24((coord.ra - H + lon - T0)/1.0027379094);
     }
     
     if( set )
     {
-        *set  = LIMIT_HOURS_TO_24(coord.ra + H + lon - T0)/1.0027379094;
+        *set  = LIMIT_HOURS_TO_24((coord.ra + H + lon - T0)/1.0027379094);
     }
     
     return RiseAndSetOk;
