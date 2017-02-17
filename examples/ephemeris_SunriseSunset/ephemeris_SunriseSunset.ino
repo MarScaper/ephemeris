@@ -26,53 +26,7 @@ void printDate(int day, int month, int year)
   Serial.print("/");
   Serial.print(month);
   Serial.print("/");
-  Serial.println(year);
-}
-
-void equatorialCoordinatesToString(EquatorialCoordinates coord, char raCoord[14] , char decCoord[14])
-{
-  int raHour,raMinute;
-  float raSecond;
-  Ephemeris::floatingHoursToHoursMinutesSeconds(coord.ra, &raHour, &raMinute, &raSecond);
-    
-  sprintf(raCoord," %02dh%02dm%02ds.%02d",raHour,raMinute,(int)raSecond,(int)round(((float)(raSecond-(int)raSecond)*pow(10,2))));
-    
-  int decDegree,decMinute;
-  float decSecond;
-  Ephemeris::floatingDegreesToDegreesMinutesSeconds(coord.dec, &decDegree, &decMinute, &decSecond);
-    
-  if(decDegree<0)
-  {
-    sprintf(decCoord,"%02dd%02d'%02d\".%02d",(int)decDegree,decMinute,(int)decSecond,(int)round(((float)(decSecond-(int)decSecond)*pow(10,2))));
-  }
-  else
-  {
-    sprintf(decCoord," %02dd%02d'%02d\".%02d",(int)decDegree,decMinute,(int)decSecond,(int)round(((float)(decSecond-(int)decSecond)*pow(10,2))));
-  }
-}
-
-void printEquatorialCoordinates(EquatorialCoordinates coord)
-{
-  if( isnan(coord.ra) ||  isnan(coord.dec))
-  {
-    // Do not work for Earth of course...
-    Serial.println("R.A: -");
-    Serial.println("Dec: -");
-        
-    return;
-  }
-    
-  char raCoord[14];
-  char decCoord[14];
-  equatorialCoordinatesToString(coord,raCoord,decCoord);
-
-  Serial.print("R.A: ");
-  Serial.println(raCoord);
-
-  Serial.print("Dec: ");
-  Serial.println(decCoord);
-
-  return;
+  Serial.print(year);
 }
 
 void printRiseAndSet(char *city, FLOAT latitude, FLOAT longitude, int UTCOffset, int day, int month, int year, char *ref)
@@ -80,6 +34,13 @@ void printRiseAndSet(char *city, FLOAT latitude, FLOAT longitude, int UTCOffset,
   Ephemeris::setLocationOnEarth(latitude,longitude);
     
   Serial.print(city);
+  Serial.print(" (UTC");
+  if( UTCOffset >= 0 )
+  {
+    Serial.print("+");
+  }
+  Serial.print(UTCOffset);
+  Serial.print(")");
   Serial.println(":");
            
   SolarSystemObject sun = Ephemeris::solarSystemObjectAtDateAndTime(Sun,
@@ -125,7 +86,7 @@ void printRiseAndSet(char *city, FLOAT latitude, FLOAT longitude, int UTCOffset,
     Serial.println("Sun never in sky for your location.");
   }
 
-  Serial.print("  ");
+  Serial.print("  Ref: ");
   Serial.println(ref);
   Serial.println();
 }
@@ -136,13 +97,15 @@ void setup()
 
   int day=10,month=2,year=2017;
 
+  Serial.print("SunRise/SunSet at ");
   printDate(day,month,year);
+  Serial.println(":\n");
 
   //               CITY         LATITUDE    LONGITUDE     TZ   DATE             REFERENCE
-  printRiseAndSet("Paris",      48.856614,    2.3522219,  +1,  day,month,year, "sunearthtools: SunRise: 08:07:00 | SunSet: 18:03:19");
-  printRiseAndSet("New York",   40.7127837, -74.0059413,  -5,  day,month,year, "sunearthtools: SunRise: 06:55:53 | SunSet: 17:25:09");
-  printRiseAndSet("Sydney",    -33.8688197, 151.2092955, +11,  day,month,year, "sunearthtools: SunRise: 06:25:25 | SunSet: 19:52:49");
-  printRiseAndSet("Sao Paulo", -23.5505199, -46.6333094,  -2,  day,month,year, "sunearthtools: SunRise: 06:51:35 | SunSet: 19:49:36");
+  printRiseAndSet("Paris",      48.856614,    2.3522219,  +1,  day,month,year, "sunearthtools (10/2/2017): SunRise: 08:07:00 | SunSet: 18:03:19");
+  printRiseAndSet("New York",   40.7127837, -74.0059413,  -5,  day,month,year, "sunearthtools (10/2/2017): SunRise: 06:55:53 | SunSet: 17:25:09");
+  printRiseAndSet("Sydney",    -33.8688197, 151.2092955, +11,  day,month,year, "sunearthtools (10/2/2017): SunRise: 06:25:25 | SunSet: 19:52:49");
+  printRiseAndSet("Sao Paulo", -23.5505199, -46.6333094,  -2,  day,month,year, "sunearthtools (10/2/2017): SunRise: 06:51:35 | SunSet: 19:49:36");
 }
 
 void loop() { }
