@@ -184,7 +184,8 @@ public:
     /*! Convert integer degrees, minutes, seconds to floating degrees. */
     static FLOAT degreesMinutesSecondsToFloatingDegrees(int degrees, int minutes, FLOAT seconds);
     
-    
+    /*! Convert floating hours by applying UTC offset. */
+    static FLOAT floatingHoursWithUTCOffset(float floatingHours, int UTCOffset);
     
     /*! Convert equatorial coordinates to horizontal coordinates. Location on Earth must be initialized first. */
     static HorizontalCoordinates equatorialToHorizontalCoordinatesAtDateAndTime(EquatorialCoordinates eqCoordinates,

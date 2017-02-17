@@ -71,23 +71,12 @@ static int   altitudeOnEarth      = NAN;
 
 void Ephemeris::floatingHoursToHoursMinutesSeconds(FLOAT floatingHours, int *hours, int *minutes, FLOAT *seconds)
 {
+    floatingHours = LIMIT_HOURS_TO_24(floatingHours);
+    
     // Calculate hours, minutes, seconds
-    if( floatingHours >= 0 )
-    {
-        *hours   = (int)floatingHours;
-        *minutes = floatingHours*60-(long)(*hours)*60;
-        *seconds = floatingHours*3600-(long)(*hours)*3600-(long)(*minutes)*60;
-    }
-    else
-    {
-        floatingHours = floatingHours*-1;
-        
-        *hours   = (int)floatingHours;
-        *minutes = floatingHours*60-(long)(*hours)*60;
-        *seconds = floatingHours*3600-(long)(*hours)*3600-(long)(*minutes)*60;
-        
-        *hours = *hours*-1;
-    }
+    *hours   = (int)floatingHours;
+    *minutes = floatingHours*60-(long)(*hours)*60;
+    *seconds = floatingHours*3600-(long)(*hours)*3600-(long)(*minutes)*60;
 }
 
 FLOAT Ephemeris::hoursMinutesSecondsToFloatingHours(int degrees, int minutes, FLOAT seconds)
@@ -1384,12 +1373,18 @@ RiseAndSetState  Ephemeris::riseAndSetForEquatorialCoordinatesAndT0(EquatorialCo
     
     if( rise )
     {
-        *rise = LIMIT_HOURS_TO_24((coord.ra - H + lon - T0)/1.0027379094);
+        *rise = coord.ra - H + lon - T0;
+        
+        // Sideral time to mean time
+        *rise *= 0.9972695663;
     }
     
     if( set )
     {
-        *set  = LIMIT_HOURS_TO_24((coord.ra + H + lon - T0)/1.0027379094);
+        *set  = coord.ra + H + lon - T0;
+        
+        // Sideral time to mean time
+        *set  *= 0.9972695663;
     }
     
     return RiseAndSetOk;
@@ -1421,4 +1416,11 @@ void Ephemeris::flipLongitude(bool flip)
     {
         longitudeOnEarthSign = -1;
     }
+}
+
+FLOAT Ephemeris::floatingHoursWithUTCOffset(float floatingHours, int UTCOffset)
+{
+    floatingHours += UTCOffset;
+    
+    return LIMIT_HOURS_TO_24(floatingHours);
 }

@@ -20,34 +20,81 @@
  
 #include <Ephemeris.h>
 
-void setup() 
+void printDate(int day, int month, int year)
 {
-  Serial.begin(9600);
-  
-  // Set your location on Earth
-  Ephemeris::setLocationOnEarth(48,50,11,  // Lat: 48°50'11"  (Paris, France)
-                                -2,20,14); // Lon: -2°20'14"
+  Serial.print(day);
+  Serial.print("/");
+  Serial.print(month);
+  Serial.print("/");
+  Serial.println(year);
+}
 
-  // East is negative and West is positive
-  Ephemeris::flipLongitude(true);
-  
-  // You can also set your altitude to improve rise and set precision
-  Ephemeris::setAltitude(50);
+void equatorialCoordinatesToString(EquatorialCoordinates coord, char raCoord[14] , char decCoord[14])
+{
+  int raHour,raMinute;
+  float raSecond;
+  Ephemeris::floatingHoursToHoursMinutesSeconds(coord.ra, &raHour, &raMinute, &raSecond);
+    
+  sprintf(raCoord," %02dh%02dm%02ds.%02d",raHour,raMinute,(int)raSecond,(int)round(((float)(raSecond-(int)raSecond)*pow(10,2))));
+    
+  int decDegree,decMinute;
+  float decSecond;
+  Ephemeris::floatingDegreesToDegreesMinutesSeconds(coord.dec, &decDegree, &decMinute, &decSecond);
+    
+  if(decDegree<0)
+  {
+    sprintf(decCoord,"%02dd%02d'%02d\".%02d",(int)decDegree,decMinute,(int)decSecond,(int)round(((float)(decSecond-(int)decSecond)*pow(10,2))));
+  }
+  else
+  {
+    sprintf(decCoord," %02dd%02d'%02d\".%02d",(int)decDegree,decMinute,(int)decSecond,(int)round(((float)(decSecond-(int)decSecond)*pow(10,2))));
+  }
+}
 
-  // Compute Sun data for a specific date and time (time is not really important for sunrise and sunset)
+void printEquatorialCoordinates(EquatorialCoordinates coord)
+{
+  if( isnan(coord.ra) ||  isnan(coord.dec))
+  {
+    // Do not work for Earth of course...
+    Serial.println("R.A: -");
+    Serial.println("Dec: -");
+        
+    return;
+  }
+    
+  char raCoord[14];
+  char decCoord[14];
+  equatorialCoordinatesToString(coord,raCoord,decCoord);
+
+  Serial.print("R.A: ");
+  Serial.println(raCoord);
+
+  Serial.print("Dec: ");
+  Serial.println(decCoord);
+
+  return;
+}
+
+void printRiseAndSet(char *city, FLOAT latitude, FLOAT longitude, int UTCOffset, int day, int month, int year, char *ref)
+{
+  Ephemeris::setLocationOnEarth(latitude,longitude);
+    
+  Serial.print(city);
+  Serial.println(":");
+           
   SolarSystemObject sun = Ephemeris::solarSystemObjectAtDateAndTime(Sun,
-                                                                    01,04,2016,
-                                                                    12,00,00);
+                                                                    day,month,year,
+                                                                    0,0,0);
 
-  // Print sunrise and sunset if available according to location on Earth
+    // Print sunrise and sunset if available according to location on Earth
   if( sun.riseAndSetState == RiseAndSetOk )
   {
     int hours,minutes;
-    float seconds;
+    FLOAT seconds;
 
     // Convert floating hours to hours, minutes, seconds and display.
-    Ephemeris::floatingHoursToHoursMinutesSeconds(sun.rise, &hours, &minutes, &seconds);
-    Serial.print("Sunrise: ");
+    Ephemeris::floatingHoursToHoursMinutesSeconds(Ephemeris::floatingHoursWithUTCOffset(sun.rise,UTCOffset), &hours, &minutes, &seconds);
+    Serial.print("  Sunrise: ");
     Serial.print(hours);
     Serial.print("h");
     Serial.print(minutes);
@@ -56,8 +103,8 @@ void setup()
     Serial.println("s");
 
     // Convert floating hours to hours, minutes, seconds and display.
-    Ephemeris::floatingHoursToHoursMinutesSeconds(sun.set, &hours, &minutes, &seconds);
-    Serial.print("Sunset:  ");
+    Ephemeris::floatingHoursToHoursMinutesSeconds(Ephemeris::floatingHoursWithUTCOffset(sun.set,UTCOffset), &hours, &minutes, &seconds);
+    Serial.print("  Sunset:  ");
     Serial.print(hours);
     Serial.print("h");
     Serial.print(minutes);
@@ -77,6 +124,25 @@ void setup()
   {
     Serial.println("Sun never in sky for your location.");
   }
+
+  Serial.print("  ");
+  Serial.println(ref);
+  Serial.println();
+}
+
+void setup() 
+{
+  Serial.begin(9600);
+
+  int day=10,month=2,year=2017;
+
+  printDate(day,month,year);
+
+  //               CITY         LATITUDE    LONGITUDE     TZ   DATE             REFERENCE
+  printRiseAndSet("Paris",      48.856614,    2.3522219,  +1,  day,month,year, "sunearthtools: SunRise: 08:07:00 | SunSet: 18:03:19");
+  printRiseAndSet("New York",   40.7127837, -74.0059413,  -5,  day,month,year, "sunearthtools: SunRise: 06:55:53 | SunSet: 17:25:09");
+  printRiseAndSet("Sydney",    -33.8688197, 151.2092955, +11,  day,month,year, "sunearthtools: SunRise: 06:25:25 | SunSet: 19:52:49");
+  printRiseAndSet("Sao Paulo", -23.5505199, -46.6333094,  -2,  day,month,year, "sunearthtools: SunRise: 06:51:35 | SunSet: 19:49:36");
 }
 
 void loop() { }
