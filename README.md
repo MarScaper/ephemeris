@@ -1,8 +1,13 @@
-# ephemeris
+# Ephemeris
+![Alt text](/ephemeris.jpg?raw=true "Optional Title")
+
 
 ## Synopsis
 
 Simple C++ library allowing to compute planet coordinates (equatorial and horizontal) with an Arduino Mega. The code is also compatible with PC.
+
+![Alt text](/ephemeris_include_graph.png?raw=true "Optional Title")
+
 
 ## Features
 - Compute equatorial coordinates (RA/Dec), horizontal coordinates (Alt/Az), rise, set, distance (in A.U), and apparent diameter (in arcminutes) for Sun, Mercury, Venus, Earth's Moon, Mars, Jupiter, Saturn, Uranus, Neptune.
@@ -14,6 +19,7 @@ Simple C++ library allowing to compute planet coordinates (equatorial and horizo
 - Transformations from equatorial coordinates (RA/Dec) to horizontal coordinates (Alt/Az).
 - Transformations from horizontal coordinates (Alt/Az) to equatorial coordinates (RA/Dec).
 - Rise and set for custom equatorial coordinates.
+- Time zone conversion.
 - Conversion from equatorial coordinates for a specified equinox (Ex:J2000) to apparent equatorial coordinates (JNow).
 
 ## Limitations
@@ -34,7 +40,9 @@ int day=10,month=4,year=2014,hour=19,minute=21,second=0;
 
 SolarSystemObject planet = Ephemeris::solarSystemObjectAtDateAndTime(Mars, day, month, year, hour, minute, second);
 
-See ephemeris_full or ephemeris_SunriseSunset in examples directory for full sample code.
+See examples directory for full sample code.
+
+![Alt text](/examples/PolarisFinder/PolarisFinder.jpg?raw=true "Optional Title")
 
 ## Motivation
 
