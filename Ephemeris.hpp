@@ -187,21 +187,38 @@ public:
     /*! Convert floating hours by applying UTC offset. */
     static FLOAT floatingHoursWithUTCOffset(float floatingHours, int UTCOffset);
     
+    /*! Convert equatorial coordinates for a specified equinox to apparent equatorial coordinates (JNow)
+     *  for a specified date and time. Conversion applies, drift per year, precession of the equinoxes, nutation and aberration. 
+     *  eqDriftPerYear.ra must be expressed in s/year.
+     *  eqDriftPerYear.dec must be expressed in "/year. */
+    static EquatorialCoordinates equatorialEquinoxToEquatorialJNowAtDateAndTime(EquatorialCoordinates eqEquinoxCoordinates,
+                                                                                int equinox,
+                                                                                EquatorialCoordinates eqDriftPerYear,
+                                                                                unsigned int day,   unsigned int month,   unsigned int year,
+                                                                                unsigned int hours, unsigned int minutes, unsigned int seconds);
+    
+    /*! Convert equatorial coordinates for a specified equinox to apparent equatorial coordinates (JNow)
+     *  for a specified date and time. Conversion applies precession of the equinoxes, nutation and aberration. */
+    static EquatorialCoordinates equatorialEquinoxToEquatorialJNowAtDateAndTime(EquatorialCoordinates eqEquinoxCoordinates,
+                                                                                int equinox,
+                                                                                unsigned int day,   unsigned int month,   unsigned int year,
+                                                                                unsigned int hours, unsigned int minutes, unsigned int seconds);
+    
     /*! Convert equatorial coordinates to horizontal coordinates. Location on Earth must be initialized first. */
     static HorizontalCoordinates equatorialToHorizontalCoordinatesAtDateAndTime(EquatorialCoordinates eqCoordinates,
-                                                                                unsigned int day,  unsigned int month,  unsigned int year,
+                                                                                unsigned int day,   unsigned int month,   unsigned int year,
                                                                                 unsigned int hours, unsigned int minutes, unsigned int seconds);
     
     /*! Convert horizontal coordinates to equatorial coordinates. Location on Earth must be initialized first. */
     static EquatorialCoordinates horizontalToEquatorialCoordinatesAtDateAndTime(HorizontalCoordinates hCoordinates,
-                                                                                unsigned int day,  unsigned int month,  unsigned int year,
+                                                                                unsigned int day,   unsigned int month,   unsigned int year,
                                                                                 unsigned int hours, unsigned int minutes, unsigned int seconds);
     
     
     
     /*! Compute solar system object for a specific date, time and location on earth (if location has been initialized first). */
     static SolarSystemObject solarSystemObjectAtDateAndTime(SolarSystemObjectIndex planet,
-                                                            unsigned int day,  unsigned int month,  unsigned int year,
+                                                            unsigned int day,   unsigned int month,   unsigned int year,
                                                             unsigned int hours, unsigned int minutes, unsigned int seconds);
     
     
@@ -209,7 +226,7 @@ public:
     /*! Compute rise and set for the equatorial coordinates we want. */
     static RiseAndSetState riseAndSetForEquatorialCoordinatesAtDateAndTime(EquatorialCoordinates coord,
                                                                            FLOAT *rise, FLOAT *set,
-                                                                           unsigned int day,  unsigned int month,  unsigned int year,
+                                                                           unsigned int day,   unsigned int month,   unsigned int year,
                                                                            unsigned int hours, unsigned int minutes, unsigned int seconds);
 
 private:
@@ -282,9 +299,22 @@ private:
     static FLOAT sumELP2000Coefs(const FLOAT *moonCoefficients, const ELP2000Coefficient *moonAngleCoefficients, int coefCount,
                                  FLOAT E, FLOAT D, FLOAT M, FLOAT Mp, FLOAT F, bool squareMultiplicator);
     
-    /*! Compute rise and set for specified equatorial coordinates, T0 (Mean sideral time at midnight), paralax, apparent diameter, and altitude. */
+    /*! Compute rise and set for specified equatorial coordinates, T0 (Mean sideral time at midnight), paralax, apparent diameter, and altitude.
+     *  Reference: https://www.imcce.fr/langues/en/grandpublic/systeme/promenade-en/pages3/367.html */
     static RiseAndSetState riseAndSetForEquatorialCoordinatesAndT0(EquatorialCoordinates coord, FLOAT T0, FLOAT *rise, FLOAT *set,
                                                                    FLOAT paralax, FLOAT apparentDiameter);
+    
+    /*! Convert equatorial coordinates for a specified equinox to apparent equatorial coordinates (JNow) for a specified T. 
+     *  Conversion applies, drift per year, precession of the equinoxes, nutation and aberration.
+     *  eqDriftPerYear.ra must be expressed in s/year.
+     *  eqDriftPerYear.dec must be expressed in "/year.
+     *  Reference: Chapter 12, page 49: Precession.
+     *             Chapter 14, page 57: Position apparente d'une étoile. */
+    static EquatorialCoordinates equatorialEquinoxToEquatorialJNowAtDateForT(EquatorialCoordinates eqEquinoxCoordinates,
+                                                                             int equinox,
+                                                                             EquatorialCoordinates eqDriftPerYear,
+                                                                             FLOAT T,
+                                                                             unsigned int year);
 };
 
 #endif

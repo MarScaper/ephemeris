@@ -41,10 +41,11 @@
 // Limit range
 #define LIMIT_DEGREES_TO_360(value) (value) >= 0 ? ((value)-(long)((value)*0.0027777778)*360) : (((value)-(long)((value)*0.0027777778)*360)+360)
 #define LIMIT_HOURS_TO_24(value) (value) >= 0 ? ((value)-(long)((value)*0.0416666667)*24) : ((value)+24)
+#define LIMIT_DEC_TO_90(value) (value) 
 
 // Convert degrees
 #define DEGREES_TO_RADIANS(value) ((value)*0.0174532925)
-#define DEGREES_TO_FLOATING_HOURS(value) ((value)*0.0666666667)
+#define DEGREES_TO_HOURS(value) ((value)*0.0666666667)
 #define DEGREES_MINUTES_SECONDES_TO_SECONDS(deg,min,sec) ((FLOAT)(deg)*3600+(FLOAT)(min)*60+(FLOAT)sec)
 #define DEGREES_MINUTES_SECONDS_TO_DECIMAL_DEGREES(deg,min,sec) (deg) >= 0 ? ((FLOAT)(deg)+(FLOAT)(min)*0.0166666667+(FLOAT)(sec)*0.0002777778) : ((FLOAT)(deg)-(FLOAT)(min)*0.0166666667-(FLOAT)(sec)*0.0002777778)
 
@@ -56,12 +57,13 @@
 #define HOURS_TO_RADIANS(value) ((value)*0.261799388)
 #define HOURS_MINUTES_SECONDS_TO_SECONDS(hour,min,sec) ((FLOAT)(hour)*3600+(FLOAT)(min)*60+(FLOAT)sec)
 #define HOURS_MINUTES_SECONDS_TO_DECIMAL_HOURS(hour,min,sec) ((FLOAT)(hour)+(FLOAT)(min)*0.0166666667+(FLOAT)(sec)*0.0002777778)
+#define HOURS_TO_DEGREES(value) ((value)*15)
 
 // Convert seconds
 #define SECONDS_TO_DECIMAL_DEGREES(value) ((FLOAT)(value)*0.0002777778)
 #define SECONDS_TO_DECIMAL_HOURS(value) ((FLOAT)(value)*0.0002777778)
 
-#define T_WITH_JD(day,time)((day-2451545+time)*0.0000273785)
+#define T_WITH_JD(day,time)((day-2451545.0+time)/36525)
 
 // Observer's coordinates on Earth
 static FLOAT latitudeOnEarth      = NAN;
@@ -134,7 +136,7 @@ HorizontalCoordinates Ephemeris::equatorialToHorizontalCoordinatesAtDateAndTime(
         
         
         // Geographic longitude in floating hours
-        FLOAT L = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth*longitudeOnEarthSign);
+        FLOAT L = DEGREES_TO_HOURS(longitudeOnEarth*longitudeOnEarthSign);
         
         // Geographic latitude in floating degrees
         FLOAT phi = latitudeOnEarth;
@@ -176,7 +178,7 @@ EquatorialCoordinates Ephemeris::horizontalToEquatorialCoordinatesAtDateAndTime(
         
         
         // Geographic longitude in floating hours
-        FLOAT L = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth*longitudeOnEarthSign);
+        FLOAT L = DEGREES_TO_HOURS(longitudeOnEarth*longitudeOnEarthSign);
         
         // Geographic latitude in floating degrees
         FLOAT phi = latitudeOnEarth;
@@ -209,7 +211,7 @@ FLOAT Ephemeris::apparentSideralTime(unsigned int day,  unsigned int month,  uns
     
     FLOAT theta0 = 100.46061837 + T*36000.770053608 + TSquared*0.000387933  - TCubed/38710000;
     theta0 = LIMIT_DEGREES_TO_360(theta0);
-    theta0 = DEGREES_TO_FLOATING_HOURS(theta0);
+    theta0 = DEGREES_TO_HOURS(theta0);
     
     FLOAT time = HOURS_MINUTES_SECONDS_TO_DECIMAL_HOURS(hours,minutes,seconds);
     
@@ -728,7 +730,7 @@ FLOAT Ephemeris::meanGreenwichSiderealTimeAtDateAndTime(unsigned int day,   unsi
     // Sideral time at midnight
     FLOAT theta0 = 100.46061837 + (36000.770053608*T0) + (0.000387933*T0Squared) - (T0Cubed/38710000);
     theta0 = LIMIT_DEGREES_TO_360(theta0);
-    theta0 = DEGREES_TO_FLOATING_HOURS(theta0);
+    theta0 = DEGREES_TO_HOURS(theta0);
     
     // Sideral time of day
     FLOAT thetaH = 1.00273790935*HOURS_MINUTES_SECONDS_TO_SECONDS(hours,minutes,seconds);
@@ -828,7 +830,7 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
     if( !isnan(longitudeOnEarth) && !isnan(latitudeOnEarth) )
     {
         // Geographic longitude in floating hours
-        FLOAT L = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth*longitudeOnEarthSign);
+        FLOAT L = DEGREES_TO_HOURS(longitudeOnEarth*longitudeOnEarthSign);
         
         // Geographic latitude in floating degrees
         FLOAT phi = latitudeOnEarth;
@@ -898,7 +900,7 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                 break;
                 
             case EarthsMoon:
-
+                
                 //
                 // Assume Moon speed to be linear for 24 hour range
                 //
@@ -945,7 +947,7 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                                                             57/60.0,
                                                             solarSystemObject.diameter/60.0);
                 }
-
+                
                 break;
                 
             default:
@@ -1343,7 +1345,7 @@ RiseAndSetState  Ephemeris::riseAndSetForEquatorialCoordinatesAndT0(EquatorialCo
         return LocationOnEarthUnitialized;
     }
     
-    FLOAT lon = DEGREES_TO_FLOATING_HOURS(longitudeOnEarth*longitudeOnEarthSign);
+    FLOAT lon = DEGREES_TO_HOURS(longitudeOnEarth*longitudeOnEarthSign);
     FLOAT lat = latitudeOnEarth;
     
     // Altitude angle
@@ -1369,7 +1371,7 @@ RiseAndSetState  Ephemeris::riseAndSetForEquatorialCoordinatesAndT0(EquatorialCo
     }
     
     FLOAT H = ACOSD(cosH);
-    H = DEGREES_TO_FLOATING_HOURS(H);
+    H = DEGREES_TO_HOURS(H);
     
     if( rise )
     {
@@ -1423,4 +1425,165 @@ FLOAT Ephemeris::floatingHoursWithUTCOffset(float floatingHours, int UTCOffset)
     floatingHours += UTCOffset;
     
     return LIMIT_HOURS_TO_24(floatingHours);
+}
+
+EquatorialCoordinates Ephemeris::equatorialEquinoxToEquatorialJNowAtDateAndTime(EquatorialCoordinates eqEquinoxCoordinates,
+                                                                                int equinox,
+                                                                                unsigned int day,  unsigned int month,  unsigned int year,
+                                                                                unsigned int hours, unsigned int minutes, unsigned int seconds)
+{
+    EquatorialCoordinates noDrift;
+    noDrift.ra  = 0;
+    noDrift.dec = 0;
+    
+    return equatorialEquinoxToEquatorialJNowAtDateAndTime(eqEquinoxCoordinates,
+                                                          equinox,
+                                                          noDrift,
+                                                          day,month,year,
+                                                          hours,minutes,seconds);
+}
+
+EquatorialCoordinates Ephemeris::equatorialEquinoxToEquatorialJNowAtDateAndTime(EquatorialCoordinates eqEquinoxCoordinates,
+                                                                                int equinox,
+                                                                                EquatorialCoordinates eqDriftPerYear,
+                                                                                unsigned int day,   unsigned int month,   unsigned int year,
+                                                                                unsigned int hours, unsigned int minutes, unsigned int seconds)
+{
+    JulianDay jd = Calendar::julianDayForDateAndTime(day, month, year, hours, minutes, seconds);
+    
+    FLOAT T = T_WITH_JD(jd.day,jd.time);
+    
+    return equatorialEquinoxToEquatorialJNowAtDateForT(eqEquinoxCoordinates, equinox, eqDriftPerYear, T, year);
+}
+
+EquatorialCoordinates Ephemeris::equatorialEquinoxToEquatorialJNowAtDateForT(EquatorialCoordinates eqEquinoxCoordinates,
+                                                                            int equinox,
+                                                                            EquatorialCoordinates eqDriftPerYear,
+                                                                            FLOAT T,
+                                                                            unsigned int year)
+{
+    
+    EquatorialCoordinates eqJNowCoordinates = eqEquinoxCoordinates;
+    
+    
+    
+    //
+    // Precession of the equinoxes
+    //
+    
+    // Convert RA to degrees
+    FLOAT RADeg = HOURS_TO_DEGREES(eqEquinoxCoordinates.ra);
+    
+#if 1
+    FLOAT Teq  = equinox-2000;
+    FLOAT m    = 3.07496 + 0.00186*Teq; // S
+    FLOAT nRA  = 1.33621 - 0.00057*Teq; // S
+    FLOAT nDec = 20.0431 - 0.0085*Teq;  // "
+    
+    FLOAT deltaRA  = m + nRA * SIND(RADeg)*TAND(eqEquinoxCoordinates.dec);
+    FLOAT deltaDec = nDec * COSD(RADeg);
+#else
+
+    FLOAT deltaRA  = 0;
+    FLOAT deltaDec = 0;
+    
+    // TODO: more precise method.
+    
+#endif
+    
+    // Add self movement per year
+    deltaRA  += eqDriftPerYear.ra;
+    deltaDec += eqDriftPerYear.dec;
+    
+    eqJNowCoordinates.ra  += SECONDS_TO_DECIMAL_HOURS(deltaRA*(year-equinox));
+    eqJNowCoordinates.dec += SECONDS_TO_DECIMAL_DEGREES(deltaDec*(year-equinox));
+    
+    
+    //
+    // Nutation
+    //
+    
+    // For tests
+    //eqJNowCoordinates.ra  = hoursMinutesSecondsToFloatingHours(10,9,7.845);
+    //eqJNowCoordinates.dec = degreesMinutesSecondsToFloatingDegrees(99, 53, 48.96);
+    
+    RADeg  = HOURS_TO_DEGREES(eqJNowCoordinates.ra);
+    FLOAT dec = eqJNowCoordinates.dec;
+    
+    FLOAT deltaPhi; // Delta nutation
+    FLOAT deltaEps; // Delta obliquity
+    FLOAT eps = obliquityAndNutationForT(T, &deltaEps, &deltaPhi);
+    
+    FLOAT deltaNutationRA = (COSD(eps) + SIND(eps) * SIND(RADeg) * TAND(dec))*deltaPhi - (COSD(RADeg)*TAND(dec)*deltaEps);
+    deltaNutationRA = SECONDS_TO_DECIMAL_DEGREES(deltaNutationRA);
+    deltaNutationRA = DEGREES_TO_HOURS(deltaNutationRA);
+    
+    FLOAT deltaNutationDec = (SIND(eps)*COSD(RADeg))*deltaPhi + SIND(RADeg)*deltaEps;
+    deltaNutationDec = SECONDS_TO_DECIMAL_DEGREES(deltaNutationDec);
+    
+    eqJNowCoordinates.ra  += deltaNutationRA;
+    eqJNowCoordinates.dec += deltaNutationDec;
+    
+    
+    //
+    // Aberration
+    //
+    
+    FLOAT TSquared = T*T;
+    
+    FLOAT L0 = 280.46646 + T*36000.76983 + TSquared*0.0003032;
+    L0 = LIMIT_DEGREES_TO_360(L0);
+    
+    FLOAT M = 357.5291092 + T*35999.0502909  - TSquared*0.0001536;
+    M = LIMIT_DEGREES_TO_360(M);
+    
+    FLOAT e = 0.016708634 - T*0.000042037 - TSquared*0.0000001267;
+    
+    FLOAT pi = 102.93735 + T*1.71946 + TSquared*0.00046;
+    
+    FLOAT C =
+    +(1.914602 - T*0.004817 - TSquared*0.000014) * SIND(M)
+    +(0.019993 - T*0.000101                    ) * SIND(2*M)
+    + 0.000289                                   * SIND(3*M);
+    
+    FLOAT O = L0 + C;
+    
+    FLOAT K = 20.49552;
+    
+    RADeg  = HOURS_TO_DEGREES(eqJNowCoordinates.ra);
+    dec    = eqJNowCoordinates.dec;
+    
+    FLOAT deltaAberrationRA =
+    -K  *(COSD(RADeg)*COSD(O)*COSD(eps)+SIND(RADeg)*SIND(O))/COSD(dec)
+    +K*e*(COSD(RADeg)*COSD(pi)*COSD(eps)+SIND(RADeg)*SIND(pi))/COSD(dec);
+    deltaAberrationRA = SECONDS_TO_DECIMAL_DEGREES(deltaAberrationRA);
+    deltaAberrationRA = DEGREES_TO_HOURS(deltaAberrationRA);
+    
+    FLOAT deltaAberrationDec =
+    -K  *(COSD(O)*COSD(eps)*(TAND(eps)*COSD(dec)-SIND(RADeg)*SIND(dec)) + COSD(RADeg)*SIND(dec)*SIND(O))
+    +K*e*(COSD(pi)*COSD(eps)*(TAND(eps)*COSD(dec)-SIND(RADeg)*SIND(dec))+ COSD(RADeg)*SIND(dec)*SIND(pi));
+    deltaAberrationDec = SECONDS_TO_DECIMAL_DEGREES(deltaAberrationDec);
+    
+    eqJNowCoordinates.ra  += deltaAberrationRA;
+    eqJNowCoordinates.dec += deltaAberrationDec;
+    
+    
+    //
+    // Avoid overflow
+    //
+    
+    if( eqJNowCoordinates.dec>90 )
+    {
+        eqJNowCoordinates.dec = 180-eqJNowCoordinates.dec;
+        eqJNowCoordinates.ra += 12;
+    }
+    else if( eqJNowCoordinates.dec<-90 )
+    {
+        eqJNowCoordinates.dec = -180-eqJNowCoordinates.dec;
+        eqJNowCoordinates.ra += 12;
+    }
+    
+    eqJNowCoordinates.ra  = LIMIT_HOURS_TO_24(eqJNowCoordinates.ra);
+    
+    return eqJNowCoordinates;
 }
