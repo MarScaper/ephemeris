@@ -14,6 +14,7 @@ Simple C++ library allowing to compute planet coordinates (equatorial and horizo
 - Transformations from equatorial coordinates (RA/Dec) to horizontal coordinates (Alt/Az).
 - Transformations from horizontal coordinates (Alt/Az) to equatorial coordinates (RA/Dec).
 - Rise and set for custom equatorial coordinates.
+- Conversion from equatorial coordinates for a specified equinox (Ex:J2000) to apparent equatorial coordinates (JNow).
 
 ## Limitations
 
