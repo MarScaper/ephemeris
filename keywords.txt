@@ -12,19 +12,19 @@ Ephemeris	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
-setLocationOnEarth                               KEYWORD2
-setLocationOnEarth                               KEYWORD2
-setAltitude                                      KEYWORD2
+setLocationOnEarth	KEYWORD2
+setLocationOnEarth	KEYWORD2
+setAltitude	KEYWORD2
 
-floatingHoursToHoursMinutesSeconds               KEYWORD2
-hoursMinutesSecondsToFloatingHours               KEYWORD2
-floatingDegreesToDegreesMinutesSeconds           KEYWORD2
-degreesMinutesSecondsToFloatingDegrees           KEYWORD2
+floatingHoursToHoursMinutesSeconds	KEYWORD2
+hoursMinutesSecondsToFloatingHours	KEYWORD2
+floatingDegreesToDegreesMinutesSeconds	KEYWORD2
+degreesMinutesSecondsToFloatingDegrees	KEYWORD2
 
-equatorialToHorizontalCoordinatesAtDateAndTime   KEYWORD2
-horizontalToEquatorialCoordinatesAtDateAndTime   KEYWORD2
-solarSystemObjectAtDateAndTime                   KEYWORD2
-riseAndSetForEquatorialCoordinatesAtDateAndTime  KEYWORD2
+equatorialToHorizontalCoordinatesAtDateAndTime	KEYWORD2
+horizontalToEquatorialCoordinatesAtDateAndTime	KEYWORD2
+solarSystemObjectAtDateAndTime	KEYWORD2
+riseAndSetForEquatorialCoordinatesAtDateAndTime	KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)
