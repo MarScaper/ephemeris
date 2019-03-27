@@ -955,8 +955,8 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                 // Assume Sun speed to be linear for 24 hour range
                 //
                 
-                tmpCoord0  = equatorialCoordinatesForSunAtJD(Calendar::julianDayForDateAndTime(day, month, year, -12, 0, 0), NULL);
-                tmpCoord24 = equatorialCoordinatesForSunAtJD(Calendar::julianDayForDateAndTime(day, month, year,  12, 0, 0), NULL);
+                tmpCoord0  = equatorialCoordinatesForSunAtJD(Calendar::julianDayForDateAndTime(day, month, year,  0, 0, 0), NULL);
+                tmpCoord24 = equatorialCoordinatesForSunAtJD(Calendar::julianDayForDateAndTime(day, month, year, 24, 0, 0), NULL);
                 
                 linearSpeedRA  = (tmpCoord24.ra  - tmpCoord0.ra);
                 linearSpeedDec = (tmpCoord24.dec - tmpCoord0.dec);
