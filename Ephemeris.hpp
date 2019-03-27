@@ -16,12 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
+
+// To speed up upload, you can disable planets calculations if not needed.
+// VSOP87 and ELP2000 will not be loaded and solarSystemObjectAtDateAndTime()
+// will simply return an empty object.
+#define DISABLE_PLANETS 0
+
 #ifndef Ephemeris_h
 #define Ephemeris_h
 
 #include "Calendar.hpp"
+
+#if !DISABLE_PLANETS
 #include "VSOP87.hpp"
 #include "ELP2000.hpp"
+#endif
 
 /*! This structure describes equatorial coordinates. */
 struct EquatorialCoordinates
@@ -93,6 +103,7 @@ enum SolarSystemObjectIndex
 enum RiseAndSetState
 {
     LocationOnEarthUnitialized,
+    RiseAndSetUdefined,
     RiseAndSetOk,
     ObjectAlwaysInSky,
     ObjectNeverInSky
@@ -159,7 +170,7 @@ class Ephemeris
     
 public:
     
-    /*! Flipe longitude coordinate. Default: West is negative and East is positive. */
+    /*! Flip longitude coordinate. Default: West is negative and East is positive. */
     static void flipLongitude(bool flip);
     
     /*! Set location on earth (used for horizontal coordinates conversion). */
@@ -213,15 +224,11 @@ public:
     static EquatorialCoordinates horizontalToEquatorialCoordinatesAtDateAndTime(HorizontalCoordinates hCoordinates,
                                                                                 unsigned int day,   unsigned int month,   unsigned int year,
                                                                                 unsigned int hours, unsigned int minutes, unsigned int seconds);
-    
-    
-    
+
     /*! Compute solar system object for a specific date, time and location on earth (if location has been initialized first). */
     static SolarSystemObject solarSystemObjectAtDateAndTime(SolarSystemObjectIndex planet,
                                                             unsigned int day,   unsigned int month,   unsigned int year,
                                                             unsigned int hours, unsigned int minutes, unsigned int seconds);
-    
-    
     
     /*! Compute rise and set for the equatorial coordinates we want. */
     static RiseAndSetState riseAndSetForEquatorialCoordinatesAtDateAndTime(EquatorialCoordinates coord,
@@ -240,6 +247,10 @@ private:
      *  Reference: Chapter 7, page 35: Temps sidéral à Greenwich. */
     static FLOAT meanGreenwichSiderealTimeAtDateAndTime(unsigned int day,   unsigned int month,   unsigned int year,
                                                         unsigned int hours, unsigned int minutes, unsigned int seconds);
+    
+    /*! Compute mean sideral time for Greenwich.
+     *  Reference: Chapter 7, page 35: Temps sidéral à Greenwich. */
+    static FLOAT meanGreenwichSiderealTimeAtJD(JulianDay jd);
     
     /*! Compute heliocentric coordinates.
      *  Reference: Chapter 22, page 83: Position des planètes. */
@@ -265,8 +276,6 @@ private:
      *  Reference: Chapter 23,  page 87: Mouvement elliptique. */
     static RectangularCoordinates HeliocentricToRectangular(HeliocentricCoordinates hc, HeliocentricCoordinates hc0);
     
-    
-    
     /*! Compute the true obliquity (angle in floating degrees) of the ecliptic,
      *  delta obliquity and delta nutation for T.
      *  Reference: Chapter 13, page 53: Nutation et obliquité de l'écliptique. */
@@ -274,30 +283,42 @@ private:
     
     /*! Compute planet informations for T.
      *  Reference: Chapter 21, page 77: Eléments des orbites planétaires. */
+#if !DISABLE_PLANETS
     static PlanetayOrbit planetayOrbitForPlanetAndT(SolarSystemObjectIndex planet, FLOAT T);
+#endif
     
     /*! Compute Moon coordinates in the sky (R.A.,Dec) for a specific date and time.
      *  Reference: Chapter 28, page 109: Position de la Lune.
      *             Chapter 8,  page 37: Transformation de coordonnées. */
+#if !DISABLE_PLANETS
     static EquatorialCoordinates equatorialCoordinatesForEarthsMoonAtJD(JulianDay jd, FLOAT *distance);
+#endif
     
     /*! Compute Sun coordinates in the sky (R.A.,Dec) for a specific date and time.
      *  Reference: Chapter 16, page 63: Les coordonnées du soleil. */
+#if !DISABLE_PLANETS
     static EquatorialCoordinates equatorialCoordinatesForSunAtJD(JulianDay jd, FLOAT *distance);
+#endif
     
     /*! Compute planet equatorial coordinates (and geocentric if needed) for a a specific Julian day.
      *  Reference: Chapter 23, page 87: Mouvement elliptique.
      *             Chapter 8,  page 37: Transformation de coordonnées. */
+#if !DISABLE_PLANETS
     static EquatorialCoordinates equatorialCoordinatesForPlanetAtJD(SolarSystemObjectIndex planet, JulianDay jd, FLOAT *distance);
+#endif
     
+#if !DISABLE_PLANETS
     /*! Compute VSOP87 (Planets) coefficients for T.
      *  Reference: Chapter 22, page 83: Position des planètes. */
     static FLOAT sumVSOP87Coefs(const VSOP87Coefficient *valuePlanetCoefficients, int coefCount, FLOAT T);
+#endif
     
+#if !DISABLE_PLANETS
     /*! Compute ELP2000 (Earth's Moon) coefficients for T.
      *  Reference: Chapter 28, page 109: Position de la Lune. */
     static FLOAT sumELP2000Coefs(const FLOAT *moonCoefficients, const ELP2000Coefficient *moonAngleCoefficients, int coefCount,
                                  FLOAT E, FLOAT D, FLOAT M, FLOAT Mp, FLOAT F, bool squareMultiplicator);
+#endif
     
     /*! Compute rise and set for specified equatorial coordinates, T0 (Mean sideral time at midnight), paralax, apparent diameter, and altitude.
      *  Reference: https://www.imcce.fr/langues/en/grandpublic/systeme/promenade-en/pages3/367.html */

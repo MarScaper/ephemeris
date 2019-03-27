@@ -46,18 +46,18 @@ class Calendar
 {
 public:
     
-    static JulianDay julianDayForDate(FLOAT day, unsigned int month, unsigned int year);
+    static JulianDay julianDayForDate(FLOAT day, int month, int year);
     
-    static JulianDay julianDayForDateAndTime(unsigned int day,   unsigned int month,   unsigned int year,
-                                             unsigned int hours, unsigned int minutes, unsigned int seconds);
+    static JulianDay julianDayForDateAndTime(int day,   int month,   int year,
+                                             int hours, int minutes, int seconds);
     
-    static void dateForJulianDay(JulianDay julianDay, FLOAT *day, unsigned int *month, unsigned int *year);
+    static void dateForJulianDay(JulianDay julianDay, FLOAT *day, int *month, int *year);
     
     static void dateAndTimeForJulianDay(JulianDay julianDay,
-                                        unsigned int *day,   unsigned int *month,   unsigned int *year,
-                                        unsigned int *hours, unsigned int *minutes, unsigned int *seconds);
+                                        int *day,   int *month,   int *year,
+                                        int *hours, int *minutes, int *seconds);
     
-    static unsigned int weekDayForDate(unsigned int day, unsigned int month, unsigned int year);
+    static unsigned int weekDayForDate( int day, int month, int year);
     
     static unsigned int weekDayForJulianDay(JulianDay julianDay);
 };

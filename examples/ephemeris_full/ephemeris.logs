@@ -1,32 +1,32 @@
 Data of Solar system objects (10/4/2014 19:21:0)
 _____________________________________
 Sun
-R.A:  01h17m00s.65
-Dec:  08d08'00".12
+R.A:  01h17m00s.62
+Dec:  08d07'55".25
 Azi: 292.30d
 Alt: -8.08d
-Rise: 5h10m34.12s
-Set:  18h34m56.03s
+Rise: 5h10m34.57s
+Set:  18h34m55.63s
 Dist: 1.002 AU
 Diam: 31.93'
 _____________________________________
 Mercury
-R.A:  00h23m28s.91
-Dec:  00d07'20".71
+R.A:  00h23m29s.27
+Dec:  00d07'19".81
 Azi: 298.45d
 Alt: -22.46d
-Rise: 4h58m58.88s
-Set:  17h8m22.05s
+Rise: 4h58m58.96s
+Set:  17h8m21.98s
 Dist: 1.268 AU
 Diam: 5.31"
 _____________________________________
 Venus
-R.A:  22h28m08s.61
-Dec: -9d30'19".13
+R.A:  22h28m08s.81
+Dec: -9d30'24".17
 Azi: 322.89d
-Alt: -45.25d
-Rise: 3h44m28.21s
-Set:  14h24m58.09s
+Alt: -45.26d
+Rise: 3h44m28.47s
+Set:  14h24m57.54s
 Dist: 0.826 AU
 Diam: 20.19"
 _____________________________________
@@ -34,67 +34,65 @@ Earth
 Look under your feet... ;)
 _____________________________________
 Earth's Moon
-R.A:  09h56m31s.61
-Dec:  07d40'25".39
-Azi: 154.32d
-Alt: 46.24d
-Rise: 12h42m3.56s
-Set:  2h50m1.92s
-Dist: 401183.15 Km
+R.A:  09h57m17s.28
+Dec:  07d03'48".21
+Azi: 154.31d
+Alt: 45.61d
+Dist: 401178.68 Km
 Diam: 30.13'
 _____________________________________
 Mars
-R.A:  13h10m54s.96
-Dec: -4d54'44".27
+R.A:  13h10m55s.57
+Dec: -4d54'55".67
 Azi: 111.50d
-Alt: 11.55d
-Rise: 18h7m20.68s
-Set:  5h30m40.90s
+Alt: 11.54d
+Rise: 18h7m21.81s
+Set:  5h30m40.29s
 Dist: 0.619 AU
 Diam: 15.13"
 _____________________________________
 Jupiter
-R.A:  06h53m55s.47
-Dec:  23d08'27".87
+R.A:  06h53m55s.49
+Dec:  23d08'27".04
 Azi: 230.83d
 Alt: 56.10d
-Rise: 9h30m52.24s
-Set:  1h35m13.89s
+Rise: 9h30m51.99s
+Set:  1h35m13.47s
 Dist: 5.281 AU
 Diam: 37.33"
 _____________________________________
 Saturn
-R.A:  15h21m21s.91
-Dec: -15d54'18".05
+R.A:  15h21m21s.94
+Dec: -15d54'18".67
 Azi: 94.18d
 Alt: -17.65d
-Rise: 21h10m21.65s
-Set:  6h47m51.08s
+Rise: 21h10m21.39s
+Set:  6h47m50.71s
 Dist: 9.033 AU
 Diam: 18.40"
 _____________________________________
 Uranus
-R.A:  00h48m42s.51
-Dec:  04d31'20".45
+R.A:  00h48m42s.52
+Dec:  04d31'20".26
 Azi: 295.79d
 Alt: -15.21d
-Rise: 5h3m57.05s
-Set:  17h53m42.81s
+Rise: 5h3m56.72s
+Set:  17h53m42.45s
 Dist: 21.019 AU
 Diam: 3.35"
 _____________________________________
 Neptune
 R.A:  22h34m38s.12
-Dec: -9d42'10".27
+Dec: -9d42'10".42
 Azi: 320.72d
 Alt: -44.77d
-Rise: 3h51m52.93s
-Set:  14h30m30.26s
+Rise: 3h51m52.59s
+Set:  14h30m29.90s
 Dist: 30.690 AU
 Diam: 2.22"
 _____________________________________
 Benchmarking Solar system...
-Elapsed time: 1.58s
+Elapsed time: 1.61s
 _____________________________________
 Testing coordinates transformations:
 R.A:  02h31m49s.00
@@ -103,5 +101,5 @@ Convert RA/Dec to Alt/Az:
 Azi: 358.89d
 Alt: 48.79d
 Convert Alt/Az back to RA/Dec:
-R.A:  02h31m48s.93
-Dec:  89d15'49".62
+R.A:  02h31m48s.91
+Dec:  89d15'47".72

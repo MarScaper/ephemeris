@@ -37,6 +37,7 @@
 #define TAND(value)   tan((value)*0.0174532925)
 
 #define ACOSD(value)  (acos((value))*57.2957795131);
+#define ATAND(value)  (atan((value))*57.2957795131);
 
 // Limit range
 #define LIMIT_DEGREES_TO_360(value) (value) >= 0 ? ((value)-(long)((value)*0.0027777778)*360) : (((value)-(long)((value)*0.0027777778)*360)+360)
@@ -287,6 +288,7 @@ FLOAT Ephemeris::obliquityAndNutationForT(FLOAT T, FLOAT *deltaObliquity, FLOAT 
     return obliquity;
 }
 
+#if !DISABLE_PLANETS
 FLOAT Ephemeris::sumELP2000Coefs(const FLOAT *moonMultCoefficients, const ELP2000Coefficient *moonAngleCoefficients, int coefCount,
                                  FLOAT E, FLOAT D, FLOAT M, FLOAT Mp, FLOAT F, bool squareMultiplicator)
 {
@@ -350,7 +352,9 @@ FLOAT Ephemeris::sumELP2000Coefs(const FLOAT *moonMultCoefficients, const ELP200
     
     return value;
 }
+#endif
 
+#if !DISABLE_PLANETS
 EquatorialCoordinates  Ephemeris::equatorialCoordinatesForEarthsMoonAtJD(JulianDay jd, FLOAT *distance)
 {
     FLOAT T        = T_WITH_JD(jd.day,jd.time);
@@ -408,10 +412,12 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForEarthsMoonAtJD(JulianD
     // Distance
     FLOAT delta  = 385000.56+sumR/1000; // Kilometers
     
+    // Convert kilometers to AU
+    FLOAT dist = delta*6.68459e-9;
+    
     if( distance )
     {
-        // Convert kilometers to AU
-        *distance = delta*6.68459e-9;
+        *distance = dist;
     }
     
     // Obliquity and Nutation
@@ -421,9 +427,42 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForEarthsMoonAtJD(JulianD
     // Intergrate nutation
     lambda += deltaNutation/3600;
     
-    return EclipticToEquatorial(lambda, beta, epsilon);
-}
+    EquatorialCoordinates eqCoord = EclipticToEquatorial(lambda, beta, epsilon);
+    
+    //
+    // Geocentric to topocentric conversion
+    //
+    
+    FLOAT paralax = 8.794/(dist)/3600.f;
+    
+    FLOAT meanSideralTime = meanGreenwichSiderealTimeAtJD(jd);
+    
+    // Geographic longitude in floating hours
+    FLOAT L = DEGREES_TO_HOURS(longitudeOnEarth*longitudeOnEarthSign);
+    
+    // Apparent sideral time in floating hours
+    FLOAT theta0 = meanSideralTime + (deltaNutation/15*COSD(epsilon))/3600;
+    
+    // Local angle in floating degrees
+    FLOAT H = (theta0-L-eqCoord.ra)*15;
+    
+    // Geocentric rectangular coordinates of the observer (Chap 6 p33)
+    FLOAT u = ATAND(0.99664719*TAND(latitudeOnEarth));
+    FLOAT rhoSinDeltaPrime    = 0.99664719*SIND(u)+(altitudeOnEarth/6378140)*SIND(latitudeOnEarth);
+    FLOAT rhoCosDeltaPrime = COSD(u)+(altitudeOnEarth/6378140)*COSD(latitudeOnEarth);
+    
+    // Paralax correction (Chap 27 p 105)
+    FLOAT detlaRa = ATAND(-rhoCosDeltaPrime*SIND(paralax)*SIND(H)/(COSD(eqCoord.dec)-rhoCosDeltaPrime*SIND(paralax)*COSD(H)));
+    FLOAT detlaDec = ATAND((SIND(eqCoord.dec)-rhoSinDeltaPrime*SIND(paralax))*COSD(detlaRa)/(COSD(eqCoord.dec)-rhoCosDeltaPrime*SIND(paralax)*COSD(H)));
+    
+    eqCoord.ra += detlaRa/15.f;
+    eqCoord.dec = detlaDec;
 
+    return eqCoord;
+}
+#endif
+
+#if !DISABLE_PLANETS
 EquatorialCoordinates  Ephemeris::equatorialCoordinatesForSunAtJD(JulianDay jd, FLOAT *distance)
 {
     EquatorialCoordinates sunCoordinates;
@@ -473,18 +512,17 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForSunAtJD(JulianDay jd, 
     }
     
     // R
-    if( distance )
-    {
-        *distance = (1.000001018*(1-e*e))/(1+e*COSD(v));
-    }
-    
+    FLOAT dist = (1.000001018*(1-e*e))/(1+e*COSD(v));
+    if( distance ) *distance = dist;
+
     FLOAT omega = 125.04 - 1934.136*T;
     
     FLOAT lambda = O - 0.00569 - 0.00478 * SIND(omega);
     
-    FLOAT eps = obliquityAndNutationForT(T, NULL, NULL);
+    FLOAT deltaNutation;
+    FLOAT epsilon = obliquityAndNutationForT(T, NULL, &deltaNutation);
     
-    eps += 0.00256*COSD(omega);
+    FLOAT eps = epsilon + 0.00256*COSD(omega);
     
     // Alpha   (Hour=Deg/15.0)
     sunCoordinates.ra = atan2(SIND(lambda)*COSD(eps),COSD(lambda));
@@ -494,9 +532,42 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForSunAtJD(JulianDay jd, 
     // Delta
     sunCoordinates.dec = asin(SIND(eps)*SIND(lambda))*180.0/PI;
     
-    return sunCoordinates;
+    EquatorialCoordinates eqCoord = sunCoordinates;
+    
+    //
+    // Geocentric to topocentric conversion
+    //
+    
+    FLOAT paralax = 8.794/(dist)/3600.f;
+    
+    FLOAT meanSideralTime = meanGreenwichSiderealTimeAtJD(jd);
+    
+    // Geographic longitude in floating hours
+    FLOAT L = DEGREES_TO_HOURS(longitudeOnEarth*longitudeOnEarthSign);
+    
+    // Apparent sideral time in floating hours
+    FLOAT theta0 = meanSideralTime + (deltaNutation/15*COSD(epsilon))/3600;
+    
+    // Local angle in floating degrees
+    FLOAT H = (theta0-L-eqCoord.ra)*15;
+    
+    // Geocentric rectangular coordinates of the observer (Chap 6 p33)
+    FLOAT u = ATAND(0.99664719*TAND(latitudeOnEarth));
+    FLOAT rhoSinDeltaPrime    = 0.99664719*SIND(u)+(altitudeOnEarth/6378140)*SIND(latitudeOnEarth);
+    FLOAT rhoCosDeltaPrime = COSD(u)+(altitudeOnEarth/6378140)*COSD(latitudeOnEarth);
+    
+    // Paralax correction (Chap 27 p 105)
+    FLOAT detlaRa = ATAND(-rhoCosDeltaPrime*SIND(paralax)*SIND(H)/(COSD(eqCoord.dec)-rhoCosDeltaPrime*SIND(paralax)*COSD(H)));
+    FLOAT detlaDec = ATAND((SIND(eqCoord.dec)-rhoSinDeltaPrime*SIND(paralax))*COSD(detlaRa)/(COSD(eqCoord.dec)-rhoCosDeltaPrime*SIND(paralax)*COSD(H)));
+    
+    eqCoord.ra += detlaRa/15.f;
+    eqCoord.dec = detlaDec;
+    
+    return eqCoord;
 }
+#endif
 
+#if !DISABLE_PLANETS
 PlanetayOrbit Ephemeris::planetayOrbitForPlanetAndT(SolarSystemObjectIndex solarSystemObjectIndex, FLOAT T)
 {
     PlanetayOrbit planetayOrbit;
@@ -589,7 +660,7 @@ PlanetayOrbit Ephemeris::planetayOrbitForPlanetAndT(SolarSystemObjectIndex solar
     planetayOrbit.omega = LIMIT_DEGREES_TO_360(planetayOrbit.omega);
     planetayOrbit.pi    = LIMIT_DEGREES_TO_360(planetayOrbit.pi);
     
-    // Mean anomalie
+    // Mean anomaly
     planetayOrbit.M = planetayOrbit.L - planetayOrbit.pi;
     planetayOrbit.M = LIMIT_DEGREES_TO_360(planetayOrbit.M);
     
@@ -598,6 +669,7 @@ PlanetayOrbit Ephemeris::planetayOrbitForPlanetAndT(SolarSystemObjectIndex solar
     
     return planetayOrbit;
 }
+#endif
 
 FLOAT Ephemeris::kepler(FLOAT M, FLOAT e)
 {
@@ -627,6 +699,7 @@ FLOAT Ephemeris::kepler(FLOAT M, FLOAT e)
     return RADIANS_TO_DEGREES(E);
 }
 
+#if !DISABLE_PLANETS
 FLOAT Ephemeris::sumVSOP87Coefs(const VSOP87Coefficient *valuePlanetCoefficients, int coefCount, FLOAT T)
 {
     // Parse each value in coef table
@@ -655,6 +728,7 @@ FLOAT Ephemeris::sumVSOP87Coefs(const VSOP87Coefficient *valuePlanetCoefficients
     
     return value;
 }
+#endif
 
 HorizontalCoordinates Ephemeris::equatorialToHorizontal(FLOAT H, FLOAT delta, FLOAT phi)
 {
@@ -742,6 +816,33 @@ FLOAT Ephemeris::meanGreenwichSiderealTimeAtDateAndTime(unsigned int day,   unsi
     return LIMIT_HOURS_TO_24(meanGreenwichSiderealTime);
 }
 
+FLOAT Ephemeris::meanGreenwichSiderealTimeAtJD(JulianDay jd)
+{
+    FLOAT meanGreenwichSiderealTime;
+    
+    FLOAT T0        = T_WITH_JD(jd.day,jd.time);
+    FLOAT T0Squared = T0*T0;
+    FLOAT T0Cubed   = T0Squared*T0;
+    
+    // Sideral time at midnight
+    FLOAT theta0 = 100.46061837 + (36000.770053608*T0) + (0.000387933*T0Squared) - (T0Cubed/38710000);
+    theta0 = LIMIT_DEGREES_TO_360(theta0);
+    theta0 = DEGREES_TO_HOURS(theta0);
+    
+    int day,month,year,hours,minutes,seconds;
+    Calendar::dateAndTimeForJulianDay(jd, &day, &month, &year, &hours, &minutes, &seconds);
+    
+    // Sideral time of day
+    FLOAT thetaH = 1.00273790935*HOURS_MINUTES_SECONDS_TO_SECONDS(hours,minutes,seconds);
+    thetaH = SECONDS_TO_DECIMAL_HOURS(thetaH);
+    
+    // Add time at midnight and time of day
+    meanGreenwichSiderealTime = theta0 + thetaH;
+    
+    return LIMIT_HOURS_TO_24(meanGreenwichSiderealTime);
+}
+
+#if !DISABLE_PLANETS
 SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectIndex solarSystemObjectIndex,
                                                             unsigned int day,   unsigned int month,   unsigned int year,
                                                             unsigned int hours, unsigned int minutes, unsigned int seconds)
@@ -854,8 +955,8 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                 // Assume Sun speed to be linear for 24 hour range
                 //
                 
-                tmpCoord0  = equatorialCoordinatesForSunAtJD(Calendar::julianDayForDateAndTime(day, month, year, 0, 0, 0), NULL);
-                tmpCoord24 = equatorialCoordinatesForSunAtJD(Calendar::julianDayForDateAndTime(day, month, year, 24, 0, 0), NULL);
+                tmpCoord0  = equatorialCoordinatesForSunAtJD(Calendar::julianDayForDateAndTime(day, month, year, -12, 0, 0), NULL);
+                tmpCoord24 = equatorialCoordinatesForSunAtJD(Calendar::julianDayForDateAndTime(day, month, year,  12, 0, 0), NULL);
                 
                 linearSpeedRA  = (tmpCoord24.ra  - tmpCoord0.ra);
                 linearSpeedDec = (tmpCoord24.dec - tmpCoord0.dec);
@@ -868,7 +969,6 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                                                                                             &solarSystemObject.rise, &solarSystemObject.set,
                                                                                             0,
                                                                                             solarSystemObject.diameter/60.0);
-                
                 if( !isnan(solarSystemObject.rise) )
                 {
                     // Now interpolate coordinates at rise time estimation
@@ -900,31 +1000,35 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                 break;
                 
             case EarthsMoon:
+
+                solarSystemObject.riseAndSetState = riseAndSetForEquatorialCoordinatesAndT0(solarSystemObject.equaCoordinates,
+                                                                                            T0,
+                                                                                            &solarSystemObject.rise, &solarSystemObject.set,
+                                                                                            0,
+                                                                                            0);
                 
                 //
                 // Assume Moon speed to be linear for 24 hour range
                 //
                 
-                tmpCoord0  = equatorialCoordinatesForEarthsMoonAtJD(Calendar::julianDayForDateAndTime(day, month, year, 0, 0, 0), NULL);
-                tmpCoord24 = equatorialCoordinatesForEarthsMoonAtJD(Calendar::julianDayForDateAndTime(day, month, year, 24, 0, 0), NULL);
+                tmpCoord0  = equatorialCoordinatesForEarthsMoonAtJD(Calendar::julianDayForDateAndTime(day, month, year, hours-12, minutes, seconds), NULL);
+                tmpCoord24 = equatorialCoordinatesForEarthsMoonAtJD(Calendar::julianDayForDateAndTime(day, month, year, hours+12, minutes, seconds), NULL);
                 
-                linearSpeedRA  = (tmpCoord24.ra  - tmpCoord0.ra);
-                linearSpeedDec = (tmpCoord24.dec - tmpCoord0.dec);
+                linearSpeedRA  = (tmpCoord24.ra  - tmpCoord0.ra)/24.f;
+                linearSpeedDec = (tmpCoord24.dec - tmpCoord0.dec)/24.f;
                 
                 // First approximation at midday
-                tmpCoord.ra  = tmpCoord0.ra  + linearSpeedRA*0.5;
-                tmpCoord.dec = tmpCoord0.dec + linearSpeedDec*0.5;
-                solarSystemObject.riseAndSetState = riseAndSetForEquatorialCoordinatesAndT0(tmpCoord,
+                solarSystemObject.riseAndSetState = riseAndSetForEquatorialCoordinatesAndT0(solarSystemObject.equaCoordinates,
                                                                                             T0,
                                                                                             &solarSystemObject.rise, &solarSystemObject.set,
-                                                                                            57/60.0,
-                                                                                            solarSystemObject.diameter/60.0);
+                                                                                            0,
+                                                                                            0);
                 
                 if( !isnan(solarSystemObject.rise) )
                 {
                     // Now interpolate coordinates at rise time estimation
-                    tmpCoord.ra  = tmpCoord0.ra  + linearSpeedRA*solarSystemObject.rise/24.0;
-                    tmpCoord.dec = tmpCoord0.dec + linearSpeedDec*solarSystemObject.rise/24.0;
+                    tmpCoord.ra  = solarSystemObject.equaCoordinates.ra  + linearSpeedRA*solarSystemObject.rise;
+                    tmpCoord.dec = solarSystemObject.equaCoordinates.dec + linearSpeedDec*solarSystemObject.rise;
                     
                     // Compute new coordinates to improve precision
                     riseAndSetForEquatorialCoordinatesAndT0(tmpCoord,
@@ -937,8 +1041,8 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                 if( !isnan(solarSystemObject.set) )
                 {
                     // Now interpolate coordinates at set time estimation
-                    tmpCoord.ra  = tmpCoord0.ra  + linearSpeedRA*solarSystemObject.set/24.0;
-                    tmpCoord.dec = tmpCoord0.dec + linearSpeedDec*solarSystemObject.set/24.0;
+                    tmpCoord.ra  = solarSystemObject.equaCoordinates.ra  + linearSpeedRA*solarSystemObject.set;
+                    tmpCoord.dec = solarSystemObject.equaCoordinates.dec + linearSpeedDec*solarSystemObject.set;
                     
                     // Compute new coordinates to improve precision
                     riseAndSetForEquatorialCoordinatesAndT0(tmpCoord,
@@ -967,6 +1071,18 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
     
     return solarSystemObject;
 }
+#else
+SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectIndex solarSystemObjectIndex,
+                                                            unsigned int day,   unsigned int month,   unsigned int year,
+                                                            unsigned int hours, unsigned int minutes, unsigned int seconds)
+{
+    // If DISABLE_PLANETS we simply return an empty SolarSystemObject
+    
+    SolarSystemObject solarSystemObject;
+    memset(&solarSystemObject,'\0',sizeof(SolarSystemObject));
+    return solarSystemObject;
+}
+#endif
 
 void Ephemeris::setLocationOnEarth(FLOAT floatingLatitude, FLOAT floatingLongitude)
 {
@@ -981,6 +1097,7 @@ void Ephemeris::setLocationOnEarth(FLOAT latDegrees, FLOAT latMinutes, FLOAT lat
     longitudeOnEarth = DEGREES_MINUTES_SECONDS_TO_DECIMAL_DEGREES(lonDegrees,lonMinutes,lonSeconds);
 }
 
+#if !DISABLE_PLANETS
 EquatorialCoordinates  Ephemeris::equatorialCoordinatesForPlanetAtJD(SolarSystemObjectIndex solarSystemObjectIndex, JulianDay jd, FLOAT *distance)
 {
     EquatorialCoordinates coordinates;
@@ -998,7 +1115,9 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForPlanetAtJD(SolarSystem
     jd2.day  = jd.day;
     jd2.time = jd.time;
     
-    FLOAT x2,y2,z2;
+    FLOAT x2=0,y2=0,z2=0;
+    
+    FLOAT dist = 0;
     
     // Iterate for good precision according to light speed delay
     while (T != lastT)
@@ -1024,18 +1143,14 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForPlanetAtJD(SolarSystem
         z2 = rectPlanet.z*rectPlanet.z;
         
         // Real distance from Earth
-        FLOAT delta = sqrtf(x2+y2+z2);
-        
-        if( distance )
-        {
-            *distance = delta;
-        }
-        
+        dist = sqrtf(x2+y2+z2);
+
         // Light time
-        TLight = delta * 0.0057755183;
+        TLight = dist * 0.0057755183;
     }
     
-    
+    if( distance ) *distance = dist;
+
     // Geocentic longitude
     FLOAT lambda = atan2(rectPlanet.y,rectPlanet.x);
     lambda = RADIANS_TO_DEGREES(lambda);
@@ -1081,9 +1196,42 @@ EquatorialCoordinates  Ephemeris::equatorialCoordinatesForPlanetAtJD(SolarSystem
     // Intergrate nutation
     lambda += deltaNutation/3600;
     
-    return EclipticToEquatorial(lambda, beta, epsilon);
+    EquatorialCoordinates eqCoord = EclipticToEquatorial(lambda, beta, epsilon);
+    
+    //
+    // Geocentric to topocentric conversion
+    //
+    
+    FLOAT paralax = 8.794/(dist)/3600.f;
+    
+    FLOAT meanSideralTime = meanGreenwichSiderealTimeAtJD(jd);
+    
+    // Geographic longitude in floating hours
+    FLOAT L = DEGREES_TO_HOURS(longitudeOnEarth*longitudeOnEarthSign);
+    
+    // Apparent sideral time in floating hours
+    FLOAT theta0 = meanSideralTime + (deltaNutation/15*COSD(epsilon))/3600;
+    
+    // Local angle in floating degrees
+    FLOAT H = (theta0-L-eqCoord.ra)*15;
+    
+    // Geocentric rectangular coordinates of the observer (Chap 6 p33)
+    FLOAT u = ATAND(0.99664719*TAND(latitudeOnEarth));
+    FLOAT rhoSinDeltaPrime    = 0.99664719*SIND(u)+(altitudeOnEarth/6378140)*SIND(latitudeOnEarth);
+    FLOAT rhoCosDeltaPrime = COSD(u)+(altitudeOnEarth/6378140)*COSD(latitudeOnEarth);
+    
+    // Paralax correction (Chap 27 p 105)
+    FLOAT detlaRa = ATAND(-rhoCosDeltaPrime*SIND(paralax)*SIND(H)/(COSD(eqCoord.dec)-rhoCosDeltaPrime*SIND(paralax)*COSD(H)));
+    FLOAT detlaDec = ATAND((SIND(eqCoord.dec)-rhoSinDeltaPrime*SIND(paralax))*COSD(detlaRa)/(COSD(eqCoord.dec)-rhoCosDeltaPrime*SIND(paralax)*COSD(H)));
+    
+    eqCoord.ra += detlaRa/15.f;
+    eqCoord.dec = detlaDec;
+    
+    return eqCoord;
 }
+#endif
 
+#if !DISABLE_PLANETS
 HeliocentricCoordinates  Ephemeris::heliocentricCoordinatesForPlanetAndT(SolarSystemObjectIndex solarSystemObjectIndex, FLOAT T)
 {
     HeliocentricCoordinates coordinates;
@@ -1333,6 +1481,7 @@ HeliocentricCoordinates  Ephemeris::heliocentricCoordinatesForPlanetAndT(SolarSy
     
     return coordinates;
 }
+#endif
 
 RiseAndSetState  Ephemeris::riseAndSetForEquatorialCoordinatesAndT0(EquatorialCoordinates coord, FLOAT T0, FLOAT *rise, FLOAT *set,
                                                                     FLOAT paralax, FLOAT apparentDiameter)

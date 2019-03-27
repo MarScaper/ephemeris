@@ -26,7 +26,7 @@
 
 #define INT(value) (value >= 0 ? (long)(value) : (long)(value-1))
 
-JulianDay Calendar::julianDayForDate(FLOAT day, unsigned int month, unsigned int year )
+JulianDay Calendar::julianDayForDate(FLOAT day, int month, int year )
 {
     if( month <= 2 )
     {
@@ -54,14 +54,14 @@ JulianDay Calendar::julianDayForDate(FLOAT day, unsigned int month, unsigned int
     return julianDay;
 }
 
-JulianDay Calendar::julianDayForDateAndTime(unsigned int day,   unsigned int month,   unsigned int year,
-                                            unsigned int hours, unsigned int minutes, unsigned int seconds)
+JulianDay Calendar::julianDayForDateAndTime(int day,   int month, int year,
+                                            int hours, int minutes, int seconds)
 {
     return julianDayForDate(day+ hours/24.0 + minutes/1440.0 + seconds/86400.0,month,year);
 }
 
 
-void Calendar::dateForJulianDay(JulianDay julianDay, FLOAT *day, unsigned int *month, unsigned int *year )
+void Calendar::dateForJulianDay(JulianDay julianDay, FLOAT *day, int *month, int *year )
 {
     long Z  = julianDay.day;
     
@@ -112,8 +112,8 @@ void Calendar::dateForJulianDay(JulianDay julianDay, FLOAT *day, unsigned int *m
     return;
 }
 
-void Calendar::dateAndTimeForJulianDay(JulianDay julianDay, unsigned int *day, unsigned int *month, unsigned int *year,
-                                       unsigned int *hours, unsigned int *minutes, unsigned int *seconds)
+void Calendar::dateAndTimeForJulianDay(JulianDay julianDay, int *day, int *month, int *year,
+                                       int *hours, int *minutes, int *seconds)
 {
     // Calculate date with float value for day.
     FLOAT floatingDay;
@@ -133,7 +133,7 @@ void Calendar::dateAndTimeForJulianDay(JulianDay julianDay, unsigned int *day, u
     return;
 }
 
-unsigned int Calendar::weekDayForDate(unsigned int day, unsigned int month, unsigned int year)
+unsigned int Calendar::weekDayForDate(int day, int month, int year)
 {
     return weekDayForJulianDay(julianDayForDate(day,month,year));
 }
