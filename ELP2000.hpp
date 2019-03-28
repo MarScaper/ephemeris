@@ -29,11 +29,11 @@
 
 struct ELP2000Coefficient
 {
-    char Ec;
-    char D;
-    char M;
-    char Mp;
-    char F;
+    int8_t Ec;
+    int8_t D;
+    int8_t M;
+    int8_t Mp;
+    int8_t F;
 };
 
 CONST FLOAT LMoonCoefficients[] =
