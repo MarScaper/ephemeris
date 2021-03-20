@@ -958,6 +958,9 @@ SolarSystemObject Ephemeris::solarSystemObjectAtDateAndTime(SolarSystemObjectInd
                 tmpCoord0  = equatorialCoordinatesForSunAtJD(Calendar::julianDayForDateAndTime(day, month, year,  0, 0, 0), NULL);
                 tmpCoord24 = equatorialCoordinatesForSunAtJD(Calendar::julianDayForDateAndTime(day, month, year, 24, 0, 0), NULL);
                 
+                // BUG REPORT 2021/03/20: avoids a looping of coordinates if the sun passes by RA:0h00.
+                if( tmpCoord24.ra < tmpCoord0.ra ) tmpCoord24.ra+=24;
+                    
                 linearSpeedRA  = (tmpCoord24.ra  - tmpCoord0.ra);
                 linearSpeedDec = (tmpCoord24.dec - tmpCoord0.dec);
                 
